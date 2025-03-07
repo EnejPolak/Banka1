@@ -181,6 +181,41 @@
             box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
         }
 
+        /* Dodano: Input group za geslo z gumbom za prikaz/skrij */
+        .input-group {
+            position: relative;
+            width: 80%;
+            max-width: 280px;
+            margin: 0.5rem 0;
+            margin-left: -25px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #222;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            margin: 0;
+        }
+        .toggle-password-btn {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #5D3FD3;
+            cursor: pointer;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .toggle-password-btn:hover {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -193,7 +228,11 @@
         <input type="text" id="emailField" placeholder="E-pošta">
         <div id="emailError" class="error-message"></div>
 
-        <input type="password" id="gesloField" placeholder="Geslo">
+        <!-- Spremenjeno: Input group za geslo z gumbom za prikaz/skrij -->
+        <div class="input-group">
+            <input type="password" id="gesloField" placeholder="Geslo">
+            <span id="togglePasswordButton" class="toggle-password-btn">Prikazi</span>
+        </div>
         <div id="gesloError" class="error-message"></div>
 
         <button type="submit" class="neon-btn" id="registerButton">
@@ -222,16 +261,16 @@
         });
     }
 
-    const registerBtn      = document.getElementById("registerButton");
-    const prijavaBtn       = document.getElementById("prijavaButton");
-    const registerContainer= document.getElementById("registerContainer");
-    const imeField         = document.getElementById("imeField");
-    const imeError         = document.getElementById("imeError");
-    const emailField       = document.getElementById("emailField");
-    const emailError       = document.getElementById("emailError");
-    const gesloField       = document.getElementById("gesloField");
-    const gesloError       = document.getElementById("gesloError");
-    const serverMsg        = document.getElementById("serverMessage");
+    const registerBtn       = document.getElementById("registerButton");
+    const prijavaBtn        = document.getElementById("prijavaButton");
+    const registerContainer = document.getElementById("registerContainer");
+    const imeField          = document.getElementById("imeField");
+    const imeError          = document.getElementById("imeError");
+    const emailField        = document.getElementById("emailField");
+    const emailError        = document.getElementById("emailError");
+    const gesloField        = document.getElementById("gesloField");
+    const gesloError        = document.getElementById("gesloError");
+    const serverMsg         = document.getElementById("serverMessage");
 
     addNeonFollow(registerBtn);
     addNeonFollow(prijavaBtn);
@@ -241,7 +280,7 @@
         window.location.href = "Prijava.html";
     });
 
-    // 1) Client-side preverjanje ob BLUR (kot pri login.html)
+    // Preverjanje ob BLUR
     imeField.addEventListener("blur", () => {
         checkIme();
     });
@@ -255,7 +294,6 @@
     function checkIme() {
         const value = imeField.value.trim();
         if (!value) {
-            // Prazno ime
             imeField.classList.add("invalid");
             imeError.innerText = "To polje je obvezno.";
             imeError.style.display = "block";
@@ -268,12 +306,10 @@
     function checkEmail() {
         const value = emailField.value.trim();
         if (!value) {
-            // Prazno polje
             emailField.classList.add("invalid");
             emailError.innerText = "To polje je obvezno.";
             emailError.style.display = "block";
         } else if (!/.+@.+\..+/.test(value)) {
-            // Nekaj je notri, ampak brez '@'
             emailField.classList.add("invalid");
             emailError.innerText = "Neveljaven e-poštni naslov.";
             emailError.style.display = "block";
@@ -285,7 +321,6 @@
 
     function checkGeslo() {
         const value = gesloField.value.trim();
-
         if (!value) {
             gesloField.classList.add("invalid");
             gesloError.innerText = "To polje je obvezno.";
@@ -300,30 +335,37 @@
         }
     }
 
+    // Funkcionalnost za prikaz/skritje gesla
+    const togglePasswordButton = document.getElementById("togglePasswordButton");
+    togglePasswordButton.addEventListener("click", () => {
+        if (gesloField.type === "password") {
+            gesloField.type = "text";
+            togglePasswordButton.textContent = "Skrij";
+        } else {
+            gesloField.type = "password";
+            togglePasswordButton.textContent = "Prikazi";
+        }
+    });
 
-    // 2) Ob SUBMIT-u najprej preverimo še enkrat client-side, nato pošljemo na strežnik
+    // Ob SUBMIT-u preverjanje in pošiljanje na strežnik
     document.getElementById("registracijaForm").addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        // Odstranimo globalne server-side razrede
         registerContainer.classList.remove("error", "success");
         serverMsg.innerText = "";
 
-        // Najprej izvedemo check
         checkIme();
         checkEmail();
         checkGeslo();
 
-        // Če je karkoli invalid, ne pošiljamo na strežnik
         if (
             imeField.classList.contains("invalid") ||
             emailField.classList.contains("invalid") ||
             gesloField.classList.contains("invalid")
         ) {
-            return; // Prekini submit
+            return;
         }
 
-        // Vse ok client-side, pošljemo na strežnik
         try {
             const ime   = imeField.value.trim();
             const email = emailField.value.trim();
@@ -334,13 +376,11 @@
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({ ime, email, geslo })
             });
-            const data = await response.json();  // Preberemo JSON odgovor s strežnika
+            const data = await response.json();
 
             if (data.status === "error") {
-                // Container rdeč
                 registerContainer.classList.add("error");
 
-                // Glede na polje, ki je narobe, obarvamo input in prikažemo sporočilo
                 if (data.field === "ime") {
                     imeField.classList.add("invalid");
                     imeError.innerText = data.message;
@@ -360,21 +400,17 @@
                     serverMsg.innerText = data.message;
                 }
             } else if (data.status === "success") {
-                // Container zelen
                 registerContainer.classList.add("success");
 
-                // Pobarvaj vsa polja (ime, email, geslo) na zeleno
                 imeField.classList.add("valid");
                 emailField.classList.add("valid");
                 gesloField.classList.add("valid");
 
-                // Počakaj 3 sekunde, nato preusmeri na prijavno stran
                 setTimeout(() => {
                     window.location.href = "Prijava.html";
                 }, 3000);
             }
         } catch (error) {
-            // Če pride do napake pri povezavi
             registerContainer.classList.add("error");
             serverMsg.innerText = "⛔ Napaka pri povezavi s strežnikom.";
         }

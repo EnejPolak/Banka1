@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registracija</title>
+    <style>
+        /* Globalni slog */
+        body {
+            background-color: #1a1b1b;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+
+        .register-container {
+            background-color: #111;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 320px;
+            text-align: center;
+            /* Začetni sij in animaciji */
+            box-shadow: 0 0 10px #5D3FD3;
+            opacity: 0;
+            transform: translateY(-10px);
+            animation: fadeIn 0.6s forwards,
+            glowPulse 2s infinite alternate ease-in-out;
+        }
+        /* FadeIn animacija (že uporabljena) */
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Nova animacija za utripajoči sij (pulsiranje) */
+        @keyframes glowPulse {
+            0% {
+                box-shadow:
+                        0 0 10px #5D3FD3,
+                        0 0 20px #5D3FD3;
+            }
+            100% {
+                box-shadow:
+                        0 0 20px #5D3FD3,
+                        0 0 40px #5D3FD3;
+            }
+        }
+
+        .register-container h2 {
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 3px #5D3FD3;
+        }
+
+        /* Poskrbimo, da so vsi elementi v form stolpčno razporejeni in centrirani */
+        .register-container form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Vnosna polja */
+        .register-container input {
+            width: 80%;
+            max-width: 280px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #222;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .register-container input:hover {
+            border-color: #5D3FD3;
+        }
+        .register-container input:focus {
+            border-color: #5D3FD3;
+            box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+        }
+
+        /* Gumbi */
+        .neon-btn {
+            position: relative;
+            background: #111;
+            border: 3px solid #000001;
+            border-radius: 6px;
+            color: #000001;
+            width: 80%;
+            max-width: 280px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            outline: none;
+            overflow: hidden;
+            z-index: 1;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+        .neon-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(
+                    circle at var(--x, 50%) var(--y, 50%),
+                    #5D3FD3,
+                    transparent 80%
+            );
+            transition: background 0.15s ease;
+            z-index: 0;
+            mix-blend-mode: screen;
+        }
+        .neon-btn::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: #111;
+            border-radius: 4px;
+            z-index: 1;
+        }
+        .neon-btn span {
+            position: relative;
+            z-index: 2;
+            transition: text-shadow 0.15s ease, color 0.15s ease;
+            color: #000001;
+        }
+        .neon-btn:hover span {
+            color: #5D3FD3;
+            text-shadow: 0 0 5px #5D3FD3, 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2>Registracija</h2>
+    <form id="registracijaForm">
+        <input type="text" id="ime" placeholder="Ime" required>
+        <input type="email" id="email" placeholder="E-pošta" required>
+        <input type="password" id="geslo" placeholder="Geslo" required>
+
+        <!-- Gumb za registracijo -->
+        <button type="submit" class="neon-btn" id="registerButton">
+            <span>Registracija</span>
+        </button>
+        <!-- Gumb za preusmeritev na prijavo (enak neon slog) -->
+        <button type="button" class="neon-btn" id="prijavaButton">
+            <span>Prijava</span>
+        </button>
+    </form>
+    <p id="sporocilo"></p>
+</div>
+
+<script>
+    // Funkcija, ki doda neon sledenje miške gumbu.
+    function addNeonFollow(btn) {
+        btn.addEventListener("mousemove", (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            btn.style.setProperty("--x", x + "px");
+            btn.style.setProperty("--y", y + "px");
+        });
+        btn.addEventListener("mouseleave", () => {
+            btn.style.removeProperty("--x");
+            btn.style.removeProperty("--y");
+        });
+    }
+
+    // Aktiviramo neon učinek za gumba
+    const registerBtn = document.getElementById("registerButton");
+    const prijavaBtn  = document.getElementById("prijavaButton");
+    addNeonFollow(registerBtn);
+    addNeonFollow(prijavaBtn);
+
+    // Ob kliku na "Prijava" preusmerimo na Prijava.html
+    prijavaBtn.addEventListener("click", () => {
+        window.location.href = "Prijava.html";
+    });
+
+    // Ob oddaji obrazca za registracijo
+    document.getElementById("registracijaForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const ime = document.getElementById("ime").value;
+        const email = document.getElementById("email").value;
+        const geslo = document.getElementById("geslo").value;
+
+        try {
+            const response = await fetch("http://localhost:8080/Banka3_war_exploded//registracija", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ ime, email, geslo })
+            });
+            const message = await response.text();
+            document.getElementById("sporocilo").innerText = message;
+        } catch (error) {
+            document.getElementById("sporocilo").innerText = "⛔ Napaka pri povezavi s strežnikom.";
+        }
+    });
+</script>
+</body>
+</html>

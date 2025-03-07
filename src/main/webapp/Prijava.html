@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <title>Prijava - Neon Obroba in Besedilo</title>
+  <style>
+    /* Globalni slog */
+    body {
+      background-color: #1a1b1b;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: #fff;
+    }
+
+    .login-container {
+      background-color: #111;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 0 10px #5D3FD3;
+      opacity: 0;
+      transform: translateY(-10px);
+      animation: fadeIn 0.6s forwards, glowPulse 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glowPulse {
+      0% {
+        box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+      }
+      100% {
+        box-shadow: 0 0 20px #5D3FD3, 0 0 40px #5D3FD3;
+      }
+    }
+
+    .login-container h2 {
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 3px #5D3FD3;
+    }
+
+    /* Centriramo elemente v formu */
+    .login-container form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .login-container input {
+      width: 80%;
+      max-width: 280px;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background-color: #222;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .login-container input:hover {
+      border-color: #5D3FD3;
+    }
+    .login-container input:focus {
+      border-color: #5D3FD3;
+      box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+    }
+
+    /* Razred za rdečo neon obrobo, ko je e-pošta neveljavna */
+    .invalid {
+      border-color: #ff0000 !important;
+      box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
+    }
+
+    /* Sporočilo o napaki - poravnano levo z animacijo */
+    .error-message {
+      color: #ff0000;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+      display: none;
+      text-align: left;
+      width: 80%;
+      max-width: 280px;
+      animation: slideInLeft 0.5s ease-out;
+      /* DODANO: poravnava na levo rob input polja */
+      align-self: flex-start;
+      margin-left: 10%;
+    }
+
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Gumbi */
+    .neon-btn {
+      position: relative;
+      background: #111;
+      border: 3px solid #000001;
+      border-radius: 6px;
+      color: #000001;
+      width: 80%;
+      max-width: 280px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      outline: none;
+      overflow: hidden;
+      z-index: 1;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .neon-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(
+              circle at var(--x, 50%) var(--y, 50%),
+              #5D3FD3,
+              transparent 80%
+      );
+      transition: background 0.15s ease;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
+
+    .neon-btn::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      right: 3px;
+      bottom: 3px;
+      background: #111;
+      border-radius: 4px;
+      z-index: 1;
+    }
+
+    .neon-btn span {
+      position: relative;
+      z-index: 2;
+      transition: text-shadow 0.15s ease, color 0.15s ease;
+      color: #000001;
+    }
+    .neon-btn:hover span {
+      color: #5D3FD3;
+      text-shadow: 0 0 5px #5D3FD3, 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+    }
+  </style>
+</head>
+<body>
+<div class="login-container">
+  <h2>Prijava</h2>
+  <form id="loginForm">
+    <input type="email" name="email" id="emailField" placeholder="E-pošta" required>
+    <!-- Element za sporočilo o napaki, poravnan levo -->
+    <div id="emailError" class="error-message">Invalid Email</div>
+    <input type="password" name="geslo" placeholder="Geslo" required>
+
+    <!-- Gumb Prijava -->
+    <button type="button" class="neon-btn" id="loginButton">
+      <span>Prijavi se</span>
+    </button>
+
+    <!-- Gumb Registracija -->
+    <button type="button" class="neon-btn" id="registracijaButton">
+      <span>Registracija</span>
+    </button>
+  </form>
+  <div id="message" style="margin-top:1rem; min-height:1.2em;"></div>
+</div>
+
+<script>
+  // Funkcija, ki doda neon sledenje miške gumba.
+  function addNeonFollow(btn) {
+    btn.addEventListener("mousemove", (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      btn.style.setProperty("--x", x + "px");
+      btn.style.setProperty("--y", y + "px");
+    });
+    btn.addEventListener("mouseleave", () => {
+      btn.style.removeProperty("--x");
+      btn.style.removeProperty("--y");
+    });
+  }
+
+  const loginBtn = document.getElementById("loginButton");
+  const regBtn   = document.getElementById("registracijaButton");
+  addNeonFollow(loginBtn);
+  addNeonFollow(regBtn);
+
+  // Preverjanje e-poštnega polja: če polje ne vsebuje "@", dodamo razred .invalid in prikažemo sporočilo
+  const emailField = document.getElementById("emailField");
+  const emailError = document.getElementById("emailError");
+  emailField.addEventListener("blur", () => {
+    if (!emailField.value.includes("@")) {
+      emailField.classList.add("invalid");
+      emailError.style.display = "block";
+      // Ponastavimo animacijo, če se ponovno sproži
+      emailError.style.animation = 'none';
+      setTimeout(() => {
+        emailError.style.animation = '';
+      }, 10);
+    } else {
+      emailField.classList.remove("invalid");
+      emailError.style.display = "none";
+    }
+  });
+
+  // Pošlji prijavne podatke
+  loginBtn.addEventListener("click", async () => {
+    if (emailField.classList.contains("invalid")) {
+      document.getElementById("message").innerText = "Vnesite veljaven e-poštni naslov.";
+      return;
+    }
+    const form = document.getElementById("loginForm");
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    for (const pair of formData.entries()) {
+      params.append(pair[0], pair[1]);
+    }
+    try {
+      const response = await fetch("http://localhost:8080/Banka3_war_exploded/prijava", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params
+      });
+      const result = await response.text();
+      document.getElementById("message").innerText = result;
+    } catch (error) {
+      document.getElementById("message").innerText = "⛔ Napaka pri povezavi s strežnikom.";
+    }
+  });
+
+  // Preusmeritev na registracijo
+  regBtn.addEventListener("click", () => {
+    window.location.href = "http://localhost:8080/Banka3_war_exploded/Registracija.html";
+  });
+</script>
+</body>
+</html>

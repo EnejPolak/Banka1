@@ -19,13 +19,18 @@ public class PrijavaServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Pridobi podatke iz HTML obrazca
         String email = request.getParameter("email");
         String geslo = request.getParameter("geslo");
+
+        // Hashiraj vneseno geslo
         String hashiranoGeslo = hashirajGeslo(geslo);
 
+        // Nastavi Content-Type na JSON
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
+        // Preveri, ali uporabnik s podano e-pošto obstaja in vrne hash gesla
         String sql = "SELECT geslo_hash FROM uporabniki WHERE email = ?";
         try (Connection povezava = PovezavaZBazo.connect();
              PreparedStatement stmt = povezava.prepareStatement(sql)) {
@@ -34,21 +39,23 @@ public class PrijavaServlet extends HttpServlet {
             try (ResultSet rezultat = stmt.executeQuery()) {
                 if (!rezultat.next()) {
                     // Uporabnik s podano e-pošto ne obstaja
-                    out.println("{\"status\":\"error\",\"field\":\"email\",\"message\":\"Neveljaven e-poštni naslov.\"}");
+                    out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"Neveljaven e-poštni naslov\"}");
                     return;
                 } else {
+                    // Uporabnik obstaja, preveri geslo
                     String hashIzBaze = rezultat.getString("geslo_hash");
                     if (!hashiranoGeslo.equals(hashIzBaze)) {
-                        out.println("{\"status\":\"error\",\"field\":\"geslo\",\"message\":\"Nepravilno geslo.\"}");
+                        out.println("{\"status\":\"error\", \"field\":\"geslo\", \"message\":\"Nepravilno geslo\"}");
                         return;
                     } else {
-                        out.println("{\"status\":\"success\",\"message\":\"✅ Prijava uspešna! Dobrodošli, " + email + "\"}");
+                        // Uspešna prijava, vrnemo JSON odgovor z "success"
+                        out.println("{\"status\":\"success\", \"message\":\"success\"}");
                     }
                 }
             }
         } catch (Exception e) {
             System.err.println("⛔ Napaka pri prijavi: " + e.getMessage());
-            out.println("{\"status\":\"error\",\"field\":\"server\",\"message\":\"Napaka pri strežniku.\"}");
+            out.println("{\"status\":\"error\", \"field\":\"server\", \"message\":\"Napaka pri strežniku\"}");
         }
     }
 

@@ -2,7 +2,6 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registracija</title>
     <style>
         /* Globalni slog */
@@ -23,31 +22,49 @@
             padding: 2rem;
             width: 320px;
             text-align: center;
-            /* Začetni sij in animaciji */
             box-shadow: 0 0 10px #5D3FD3;
             opacity: 0;
             transform: translateY(-10px);
-            animation: fadeIn 0.6s forwards,
-            glowPulse 2s infinite alternate ease-in-out;
+            animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
         }
-        /* FadeIn animacija (že uporabljena) */
+
+        /* Rdeča animacija ob napaki (od strežnika) */
+        .register-container.error {
+            animation: fadeIn 0.6s forwards, glowPulseRed 2s infinite alternate ease-in-out !important;
+        }
+        /* Zelena animacija ob uspehu */
+        .register-container.success {
+            animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
+        }
+
         @keyframes fadeIn {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        /* Nova animacija za utripajoči sij (pulsiranje) */
-        @keyframes glowPulse {
+        @keyframes glowPulsePurple {
             0% {
-                box-shadow:
-                        0 0 10px #5D3FD3,
-                        0 0 20px #5D3FD3;
+                box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
             }
             100% {
-                box-shadow:
-                        0 0 20px #5D3FD3,
-                        0 0 40px #5D3FD3;
+                box-shadow: 0 0 20px #5D3FD3, 0 0 40px #5D3FD3;
+            }
+        }
+        @keyframes glowPulseRed {
+            0% {
+                box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            }
+            100% {
+                box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+            }
+        }
+        @keyframes glowPulseGreen {
+            0% {
+                box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            }
+            100% {
+                box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
             }
         }
 
@@ -55,16 +72,14 @@
             margin-bottom: 1.5rem;
             text-shadow: 0 0 3px #5D3FD3;
         }
-
-        /* Poskrbimo, da so vsi elementi v form stolpčno razporejeni in centrirani */
         .register-container form {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* Vnosna polja */
         .register-container input {
+            /* NE uporabljamo required, ker preverjamo ročno */
             width: 80%;
             max-width: 280px;
             padding: 0.75rem;
@@ -83,6 +98,30 @@
         .register-container input:focus {
             border-color: #5D3FD3;
             box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+        }
+
+        /* Rdeča obroba pri neveljavnem polju (client-side ali server-side napaka) */
+        .invalid {
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
+        }
+
+        /* Sporočila o napaki (client-side ali server-side) */
+        .error-message {
+            color: #ff0000;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: none;
+            text-align: left;
+            width: 80%;
+            max-width: 280px;
+            animation: slideInLeft 0.5s ease-out;
+            align-self: flex-start;
+            margin-left: 10%;
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         /* Gumbi */
@@ -111,11 +150,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            background: radial-gradient(
-                    circle at var(--x, 50%) var(--y, 50%),
-                    #5D3FD3,
-                    transparent 80%
-            );
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), #5D3FD3, transparent 80%);
             transition: background 0.15s ease;
             z-index: 0;
             mix-blend-mode: screen;
@@ -141,30 +176,38 @@
             color: #5D3FD3;
             text-shadow: 0 0 5px #5D3FD3, 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
         }
+        .valid {
+            border-color: #00ff00 !important;
+            box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
+        }
+
     </style>
 </head>
 <body>
-<div class="register-container">
+<div class="register-container" id="registerContainer">
     <h2>Registracija</h2>
     <form id="registracijaForm">
-        <input type="text" id="ime" placeholder="Ime" required>
-        <input type="email" id="email" placeholder="E-pošta" required>
-        <input type="password" id="geslo" placeholder="Geslo" required>
+        <input type="text" id="imeField" placeholder="Ime">
+        <div id="imeError" class="error-message"></div>
 
-        <!-- Gumb za registracijo -->
+        <input type="text" id="emailField" placeholder="E-pošta">
+        <div id="emailError" class="error-message"></div>
+
+        <input type="password" id="gesloField" placeholder="Geslo">
+        <div id="gesloError" class="error-message"></div>
+
         <button type="submit" class="neon-btn" id="registerButton">
             <span>Registracija</span>
         </button>
-        <!-- Gumb za preusmeritev na prijavo (enak neon slog) -->
         <button type="button" class="neon-btn" id="prijavaButton">
             <span>Prijava</span>
         </button>
     </form>
-    <p id="sporocilo"></p>
+    <div id="serverMessage" style="margin-top:1rem; min-height:1.2em;"></div>
 </div>
 
 <script>
-    // Funkcija, ki doda neon sledenje miške gumbu.
+    // Funkcija za neon efekt gumbov
     function addNeonFollow(btn) {
         btn.addEventListener("mousemove", (e) => {
             const rect = btn.getBoundingClientRect();
@@ -179,34 +222,161 @@
         });
     }
 
-    // Aktiviramo neon učinek za gumba
-    const registerBtn = document.getElementById("registerButton");
-    const prijavaBtn  = document.getElementById("prijavaButton");
+    const registerBtn      = document.getElementById("registerButton");
+    const prijavaBtn       = document.getElementById("prijavaButton");
+    const registerContainer= document.getElementById("registerContainer");
+    const imeField         = document.getElementById("imeField");
+    const imeError         = document.getElementById("imeError");
+    const emailField       = document.getElementById("emailField");
+    const emailError       = document.getElementById("emailError");
+    const gesloField       = document.getElementById("gesloField");
+    const gesloError       = document.getElementById("gesloError");
+    const serverMsg        = document.getElementById("serverMessage");
+
     addNeonFollow(registerBtn);
     addNeonFollow(prijavaBtn);
 
-    // Ob kliku na "Prijava" preusmerimo na Prijava.html
+    // Preusmeritev na prijavo
     prijavaBtn.addEventListener("click", () => {
         window.location.href = "Prijava.html";
     });
 
-    // Ob oddaji obrazca za registracijo
-    document.getElementById("registracijaForm").addEventListener("submit", async function(event) {
-        event.preventDefault();
-        const ime = document.getElementById("ime").value;
-        const email = document.getElementById("email").value;
-        const geslo = document.getElementById("geslo").value;
+    // 1) Client-side preverjanje ob BLUR (kot pri login.html)
+    imeField.addEventListener("blur", () => {
+        checkIme();
+    });
+    emailField.addEventListener("blur", () => {
+        checkEmail();
+    });
+    gesloField.addEventListener("blur", () => {
+        checkGeslo();
+    });
 
+    function checkIme() {
+        const value = imeField.value.trim();
+        if (!value) {
+            // Prazno ime
+            imeField.classList.add("invalid");
+            imeError.innerText = "To polje je obvezno.";
+            imeError.style.display = "block";
+        } else {
+            imeField.classList.remove("invalid");
+            imeError.style.display = "none";
+        }
+    }
+
+    function checkEmail() {
+        const value = emailField.value.trim();
+        if (!value) {
+            // Prazno polje
+            emailField.classList.add("invalid");
+            emailError.innerText = "To polje je obvezno.";
+            emailError.style.display = "block";
+        } else if (!/.+@.+\..+/.test(value)) {
+            // Nekaj je notri, ampak brez '@'
+            emailField.classList.add("invalid");
+            emailError.innerText = "Neveljaven e-poštni naslov.";
+            emailError.style.display = "block";
+        } else {
+            emailField.classList.remove("invalid");
+            emailError.style.display = "none";
+        }
+    }
+
+    function checkGeslo() {
+        const value = gesloField.value.trim();
+
+        if (!value) {
+            gesloField.classList.add("invalid");
+            gesloError.innerText = "To polje je obvezno.";
+            gesloError.style.display = "block";
+        } else if (value.length < 8) {
+            gesloField.classList.add("invalid");
+            gesloError.innerText = "Geslo mora vsebovati vsaj 8 znakov.";
+            gesloError.style.display = "block";
+        } else {
+            gesloField.classList.remove("invalid");
+            gesloError.style.display = "none";
+        }
+    }
+
+
+    // 2) Ob SUBMIT-u najprej preverimo še enkrat client-side, nato pošljemo na strežnik
+    document.getElementById("registracijaForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        // Odstranimo globalne server-side razrede
+        registerContainer.classList.remove("error", "success");
+        serverMsg.innerText = "";
+
+        // Najprej izvedemo check
+        checkIme();
+        checkEmail();
+        checkGeslo();
+
+        // Če je karkoli invalid, ne pošiljamo na strežnik
+        if (
+            imeField.classList.contains("invalid") ||
+            emailField.classList.contains("invalid") ||
+            gesloField.classList.contains("invalid")
+        ) {
+            return; // Prekini submit
+        }
+
+        // Vse ok client-side, pošljemo na strežnik
         try {
-            const response = await fetch("http://localhost:8080/Banka3_war_exploded//registracija", {
+            const ime   = imeField.value.trim();
+            const email = emailField.value.trim();
+            const geslo = gesloField.value.trim();
+
+            const response = await fetch("http://localhost:8080/Banka3_war_exploded/registracija", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({ ime, email, geslo })
             });
-            const message = await response.text();
-            document.getElementById("sporocilo").innerText = message;
+            const data = await response.json();  // Preberemo JSON odgovor s strežnika
+
+            if (data.status === "error") {
+                // Container rdeč
+                registerContainer.classList.add("error");
+
+                // Glede na polje, ki je narobe, obarvamo input in prikažemo sporočilo
+                if (data.field === "ime") {
+                    imeField.classList.add("invalid");
+                    imeError.innerText = data.message;
+                    imeError.style.display = "block";
+                }
+                if (data.field === "email") {
+                    emailField.classList.add("invalid");
+                    emailError.innerText = data.message;
+                    emailError.style.display = "block";
+                }
+                if (data.field === "geslo") {
+                    gesloField.classList.add("invalid");
+                    gesloError.innerText = data.message;
+                    gesloError.style.display = "block";
+                }
+                if (data.field === "server") {
+                    serverMsg.innerText = data.message;
+                }
+            } else if (data.status === "success") {
+                // Container zelen
+                registerContainer.classList.add("success");
+
+                // Pobarvaj vsa polja (ime, email, geslo) na zeleno
+                imeField.classList.add("valid");
+                emailField.classList.add("valid");
+                gesloField.classList.add("valid");
+
+                // Počakaj 3 sekunde, nato preusmeri na prijavno stran
+                setTimeout(() => {
+                    window.location.href = "Prijava.html";
+                }, 3000);
+            }
         } catch (error) {
-            document.getElementById("sporocilo").innerText = "⛔ Napaka pri povezavi s strežnikom.";
+            // Če pride do napake pri povezavi
+            registerContainer.classList.add("error");
+            serverMsg.innerText = "⛔ Napaka pri povezavi s strežnikom.";
         }
     });
 </script>

@@ -26,6 +26,11 @@
       animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
     }
 
+    /* Ob uspešni prijavi se container obarva zeleno */
+    .login-container.success {
+      animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
+    }
+
     .login-container h2 {
       margin-bottom: 1.5rem;
       text-shadow: 0 0 3px #5D3FD3;
@@ -159,6 +164,15 @@
       }
     }
 
+    @keyframes glowPulseGreen {
+      0% {
+        box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+      }
+      100% {
+        box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+      }
+    }
+
     /* Input group za geslo z gumbom za prikaz/skrij v istem polju */
     .input-group {
       position: relative;
@@ -195,6 +209,12 @@
     }
     .toggle-password-btn:hover {
       color: #fff;
+    }
+
+    /* Input fields, ko so valid, obarvajo se zeleno */
+    .valid {
+      border-color: #00ff00 !important;
+      box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
     }
   </style>
 </head>
@@ -342,9 +362,15 @@
           messageDiv.innerText = data.message;
         }
       } else if (data.status === "success") {
+        // Ob uspešni prijavi se celoten container obarva zeleno,
+        // inputi se pobarvajo s class .valid, ki ima zeleno obrobo in glow.
         loginContainer.classList.add("success");
         emailField.classList.add("valid");
         passwordField.classList.add("valid");
+
+        setTimeout(() => {
+          window.location.href = "ndex.html";
+        }, 2000);
       }
     } catch (error) {
       loginContainer.classList.add("error");

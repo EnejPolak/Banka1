@@ -66,7 +66,7 @@ public class UrediTransakcijoServlet extends HttpServlet {
                 out.print("⛔ Vnesite ime nove kategorije.");
                 return;
             }
-            kategorijaId = KategorijeDAO.getOrCreateCategory(uporabnikId, novaKategorija, tip);
+            kategorijaId = KategorijeDAO.dobiAliNarediKategorijo(uporabnikId, novaKategorija, tip);
             if (kategorijaId == -1) {
                 out.print("⛔ Napaka pri vstavljanju nove kategorije.");
                 return;

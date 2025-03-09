@@ -1,5 +1,6 @@
 package com.jetbrains.hellowebapp;
 
+import com.jetbrains.hellowebapp.UporabnikDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,14 +17,16 @@ public class Registracija extends HttpServlet {
             throws ServletException, IOException {
 
         // Pridobi podatke
-        String ime   = request.getParameter("ime");
+        String ime = request.getParameter("ime");
         String email = request.getParameter("email");
         String geslo = request.getParameter("geslo");
+        // Pridobi id države, ki ga uporabnik izbere (npr. iz dropdown menija)
+        String drzavaStr = request.getParameter("drzava");
 
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Preveri polja
+        // Preverjanje polj
         if (ime == null || ime.trim().isEmpty()) {
             out.println("{\"status\":\"error\", \"field\":\"ime\", \"message\":\"Ime ne sme biti prazno.\"}");
             return;
@@ -36,14 +39,25 @@ public class Registracija extends HttpServlet {
             out.println("{\"status\":\"error\", \"field\":\"geslo\", \"message\":\"Geslo ne sme biti prazno.\"}");
             return;
         }
+        if (drzavaStr == null || drzavaStr.trim().isEmpty()) {
+            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Izberite državo.\"}");
+            return;
+        }
 
-        // Klic v bazo
+        int drzavaId;
         try {
-            boolean uspeh = UporabnikDAO.registrirajUporabnika(ime, email, geslo);
+            drzavaId = Integer.parseInt(drzavaStr);
+        } catch (NumberFormatException e) {
+            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Neveljavna izbira države.\"}");
+            return;
+        }
+
+        // Klic v bazo (sedaj posredujemo 4 argumente)
+        try {
+            boolean uspeh = UporabnikDAO.registrirajUporabnika(ime, email, geslo, drzavaId);
             if (uspeh) {
                 out.println("{\"status\":\"success\"}");
             } else {
-                // E-pošta že obstaja
                 out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"E-pošta že obstaja!\"}");
             }
         } catch (Exception e) {
@@ -51,4 +65,3 @@ public class Registracija extends HttpServlet {
         }
     }
 }
-

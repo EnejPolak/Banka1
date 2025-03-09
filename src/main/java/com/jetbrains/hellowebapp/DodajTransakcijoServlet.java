@@ -66,7 +66,8 @@ public class DodajTransakcijoServlet extends HttpServlet {
             return;
         }
 
-        int kategorijaId = KategorijeDAO.getOrCreateCategory(uporabnikId, kategorija.trim(), tip.trim());
+        // Popravljen klic: uporabimo dobiAliNarediKategorijo namesto getOrCreateCategory
+        int kategorijaId = KategorijeDAO.dobiAliNarediKategorijo(uporabnikId, kategorija.trim(), tip.trim());
         if (kategorijaId == -1) {
             out.println("⛔ Napaka: Kategorija ni bila ustvarjena.");
             return;
@@ -94,5 +95,3 @@ public class DodajTransakcijoServlet extends HttpServlet {
         }
     }
 }
-
-

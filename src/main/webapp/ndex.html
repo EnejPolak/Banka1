@@ -407,13 +407,19 @@
                 <h2>Dodaj prihodek</h2>
                 <form id="prihodekForm">
                     <input type="hidden" id="tipPrihodek" value="prihodek">
+
+                    <!-- Dropdown vedno prikazuje 'Dodaj novo kategorijo' na dnu -->
                     <div class="form-group">
-                        <select id="kategorijaPrihodek"></select>
+                        <select id="kategorijaPrihodek">
+                            <!-- Dinamično naložene kategorije, plus 'Dodaj novo kategorijo' na koncu -->
+                        </select>
                         <div id="kategorijaPrihodekError" class="error-message"></div>
                     </div>
+                    <!-- Skriti textbox, če izbere 'Dodaj novo kategorijo' -->
                     <div class="form-group" id="novaKategorijaPrihodekGroup" style="display: none;">
                         <input type="text" id="novaKategorijaPrihodek" placeholder="Nova kategorija">
                     </div>
+
                     <div class="form-group">
                         <input type="text" id="znesekPrihodek" placeholder="Znesek">
                         <div id="znesekPrihodekError" class="error-message"></div>
@@ -425,7 +431,9 @@
                     <div class="form-group">
                         <textarea id="opisPrihodek" rows="3" placeholder="Opis (opcijsko)"></textarea>
                     </div>
-                    <button type="submit" class="neon-btn" id="dodajPrihodekButton"><span>Dodaj prihodek</span></button>
+                    <button type="submit" class="neon-btn" id="dodajPrihodekButton">
+                        <span>Dodaj prihodek</span>
+                    </button>
                 </form>
                 <div id="serverMessagePrihodek" style="margin-top:1rem; min-height:1.2em;"></div>
             </div>
@@ -514,32 +522,36 @@
     </button>
 </div>
 <script>
-    // Ob nalaganju strani
-    document.addEventListener("DOMContentLoaded", () => {
-        loadCategories();
-        naloziTransakcije();
-    });
+    // Ob nalaganju strani dinamično naložimo kategorije
+    document.addEventListener("DOMContentLoaded", loadCategories);
+    // Dodan dodatni DOMContentLoaded listener za nalaganje transakcij
+    document.addEventListener("DOMContentLoaded", naloziTransakcije);
 
-    // Funkcija za nalaganje kategorij za obrazce (levi del)
+    // 1) Funkcija, ki iz baze dobi kategorije (JSON) in jih vstavi v dropdown menije
     async function loadCategories() {
         try {
             const response = await fetch("dobiKategorije");
             const data = await response.json();
+
             const prihodekSelect = document.getElementById("kategorijaPrihodek");
             const odhodekSelect = document.getElementById("kategorijaOdhodek");
+
+            // Počisti obstoječe
             prihodekSelect.innerHTML = "";
             odhodekSelect.innerHTML = "";
 
-            let defPrihodek = document.createElement("option");
-            defPrihodek.value = "";
-            defPrihodek.text = "Izberi kategorijo";
-            prihodekSelect.appendChild(defPrihodek);
+            // Privzete možnosti
+            let defaultOption1 = document.createElement("option");
+            defaultOption1.value = "";
+            defaultOption1.text = "Izberi kategorijo";
+            prihodekSelect.appendChild(defaultOption1);
 
-            let defOdhodek = document.createElement("option");
-            defOdhodek.value = "";
-            defOdhodek.text = "Izberi kategorijo";
-            odhodekSelect.appendChild(defOdhodek);
+            let defaultOption2 = document.createElement("option");
+            defaultOption2.value = "";
+            defaultOption2.text = "Izberi kategorijo";
+            odhodekSelect.appendChild(defaultOption2);
 
+            // Vstavi kategorije (filtrirane glede na tip)
             data.forEach(cat => {
                 let option = document.createElement("option");
                 option.value = cat.ime;
@@ -551,20 +563,351 @@
                 }
             });
 
-            // Možnost "Dodaj novo kategorijo" samo v obrazcih za dodajanje
-            let addNewPrih = document.createElement("option");
-            addNewPrih.value = "addNew";
-            addNewPrih.text = "Dodaj novo kategorijo";
-            prihodekSelect.appendChild(addNewPrih);
+            // Dodajmo možnost 'Dodaj novo kategorijo' (vedno na koncu)
+            let addNewOption1 = document.createElement("option");
+            addNewOption1.value = "addNew";
+            addNewOption1.text = "Dodaj novo kategorijo";
+            prihodekSelect.appendChild(addNewOption1);
 
-            let addNewOdh = document.createElement("option");
-            addNewOdh.value = "addNew";
-            addNewOdh.text = "Dodaj novo kategorijo";
-            odhodekSelect.appendChild(addNewOdh);
+            let addNewOption2 = document.createElement("option");
+            addNewOption2.value = "addNew";
+            addNewOption2.text = "Dodaj novo kategorijo";
+            odhodekSelect.appendChild(addNewOption2);
+
         } catch (error) {
             console.error("Napaka pri nalaganju kategorij:", error);
         }
     }
+
+    // 2) Neon sledenje za gumbe
+    function addNeonFollow(btn) {
+        btn.addEventListener("mousemove", (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            btn.style.setProperty("--x", x + "px");
+            btn.style.setProperty("--y", y + "px");
+        });
+        btn.addEventListener("mouseleave", () => {
+            btn.style.removeProperty("--x");
+            btn.style.removeProperty("--y");
+        });
+    }
+    addNeonFollow(document.getElementById("dodajPrihodekButton"));
+    addNeonFollow(document.getElementById("dodajOdhodekButton"));
+
+    // 3) Ob izbiri "Dodaj novo kategorijo" prikaži textbox
+    function toggleNovaKategorija(selectElem, novaGroupId) {
+        const novaGroup = document.getElementById(novaGroupId);
+        if (selectElem.value === "addNew") {
+            novaGroup.style.display = "block";
+        } else {
+            novaGroup.style.display = "none";
+        }
+    }
+    document.getElementById("kategorijaPrihodek").addEventListener("change", function() {
+        toggleNovaKategorija(this, "novaKategorijaPrihodekGroup");
+    });
+    document.getElementById("kategorijaOdhodek").addEventListener("change", function() {
+        toggleNovaKategorija(this, "novaKategorijaOdhodekGroup");
+    });
+
+    // --- PRIHODEK VALIDACIJA ---
+    const kategorijaPrihodek         = document.getElementById("kategorijaPrihodek");
+    const kategorijaPrihodekError    = document.getElementById("kategorijaPrihodekError");
+    const novaKategorijaPrihodek     = document.getElementById("novaKategorijaPrihodek");
+
+    const znesekPrihodek            = document.getElementById("znesekPrihodek");
+    const znesekPrihodekError       = document.getElementById("znesekPrihodekError");
+
+    const datumPrihodek             = document.getElementById("datumPrihodek");
+    const datumPrihodekError        = document.getElementById("datumPrihodekError");
+
+    const opisPrihodek              = document.getElementById("opisPrihodek");
+    const serverMessagePrihodek     = document.getElementById("serverMessagePrihodek");
+
+    function checkKategorijaPrihodek() {
+        // Če je izbrana "Dodaj novo kategorijo", preverimo textbox
+        if (kategorijaPrihodek.value === "addNew") {
+            if (!novaKategorijaPrihodek.value.trim()) {
+                // Ni vnesel nove kategorije
+                novaKategorijaPrihodek.classList.add("invalid");
+                kategorijaPrihodekError.innerText = "Vnesite novo kategorijo.";
+                kategorijaPrihodekError.style.display = "block";
+                return;
+            } else {
+                novaKategorijaPrihodek.classList.remove("invalid");
+                kategorijaPrihodekError.style.display = "none";
+            }
+        } else {
+            // Če ni izbrana 'Dodaj novo', samo preverimo, da ni prazen dropdown
+            if (!kategorijaPrihodek.value) {
+                kategorijaPrihodek.classList.add("invalid");
+                kategorijaPrihodekError.innerText = "Izberite kategorijo ali dodajte novo.";
+                kategorijaPrihodekError.style.display = "block";
+                return;
+            } else {
+                kategorijaPrihodek.classList.remove("invalid");
+                kategorijaPrihodekError.style.display = "none";
+            }
+        }
+    }
+    function checkZnesekPrihodek() {
+        const value = znesekPrihodek.value.trim();
+        if (!value) {
+            znesekPrihodek.classList.add("invalid");
+            znesekPrihodekError.innerText = "To polje je obvezno.";
+            znesekPrihodekError.style.display = "block";
+        } else if (isNaN(value) || parseFloat(value) <= 0) {
+            znesekPrihodek.classList.add("invalid");
+            znesekPrihodekError.innerText = "Vnesite veljaven znesek (> 0).";
+            znesekPrihodekError.style.display = "block";
+        } else {
+            znesekPrihodek.classList.remove("invalid");
+            znesekPrihodekError.style.display = "none";
+        }
+    }
+    function checkDatumPrihodek() {
+        if (!datumPrihodek.value.trim()) {
+            datumPrihodek.classList.add("invalid");
+            datumPrihodekError.innerText = "To polje je obvezno.";
+            datumPrihodekError.style.display = "block";
+        } else {
+            datumPrihodek.classList.remove("invalid");
+            datumPrihodekError.style.display = "none";
+        }
+    }
+
+    kategorijaPrihodek.addEventListener("blur", checkKategorijaPrihodek);
+    znesekPrihodek.addEventListener("blur", checkZnesekPrihodek);
+    datumPrihodek.addEventListener("blur", checkDatumPrihodek);
+
+    document.getElementById("prihodekForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        serverMessagePrihodek.innerText = "";
+        // Validacija
+        checkKategorijaPrihodek();
+        checkZnesekPrihodek();
+        checkDatumPrihodek();
+
+        // Če so polja invalid, prekinemo
+        if (
+            kategorijaPrihodek.classList.contains("invalid") ||
+            znesekPrihodek.classList.contains("invalid") ||
+            datumPrihodek.classList.contains("invalid")
+        ) {
+            return;
+        }
+
+        // Določimo končno kategorijo
+        let finalKategorija = "";
+        if (kategorijaPrihodek.value === "addNew") {
+            finalKategorija = novaKategorijaPrihodek.value.trim();
+            // Dodaj novo možnost v dropdown, če želiš, da ostane
+            let newOption = document.createElement("option");
+            newOption.value = finalKategorija;
+            newOption.text = finalKategorija;
+            kategorijaPrihodek.appendChild(newOption);
+            // Nastavimo dropdown na to novo kategorijo
+            kategorijaPrihodek.value = finalKategorija;
+        } else {
+            finalKategorija = kategorijaPrihodek.options[kategorijaPrihodek.selectedIndex].text;
+        }
+
+        // Sestavimo podatke
+        const tip = document.getElementById("tipPrihodek").value;
+        const podatki = {
+            kategorija: finalKategorija,
+            tip: tip,
+            znesek: znesekPrihodek.value.trim(),
+            datum_transakcije: datumPrihodek.value.trim(),
+            opis: opisPrihodek.value.trim()
+        };
+
+        try {
+            const response = await fetch("dodajTransakcijo", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(podatki)
+            });
+            const text = await response.text();
+            if(text.startsWith("✅")) {
+                let container = document.getElementById("prihodekContainer");
+                container.classList.add("success");
+                let inputs = container.querySelectorAll("input, textarea");
+                inputs.forEach(function(input) {
+                    input.style.borderColor = "#00ff00";
+                    input.style.boxShadow = "0 0 10px #00ff00, 0 0 20px #00ff00";
+                });
+                let btn = document.getElementById("dodajPrihodekButton");
+                let originalNeon = getComputedStyle(btn).getPropertyValue("--neon-color") || "#5D3FD3";
+                btn.style.setProperty("--neon-color", "#00ff00");
+                btn.style.borderColor = "#00ff00";
+                btn.querySelector("span").style.color = "#00ff00";
+                setTimeout(() => {
+                    container.classList.remove("success");
+                    inputs.forEach(function(input) {
+                        input.style.borderColor = "";
+                        input.style.boxShadow = "";
+                    });
+                    btn.style.setProperty("--neon-color", originalNeon);
+                    btn.style.borderColor = "";
+                    btn.querySelector("span").style.color = "";
+                    // Resetiraj polja
+                    kategorijaPrihodek.value = "";
+                    novaKategorijaPrihodek.value = "";
+                    znesekPrihodek.value = "";
+                    datumPrihodek.value = "";
+                    opisPrihodek.value = "";
+                    serverMessagePrihodek.innerText = "";
+                }, 2000);
+            } else {
+                serverMessagePrihodek.innerText = text;
+            }
+        } catch (error) {
+            serverMessagePrihodek.innerText = "⛔ Napaka pri povezavi s strežnikom.";
+        }
+    });
+
+    // --- ODHODEK VALIDACIJA ---
+    const kategorijaOdhodek       = document.getElementById("kategorijaOdhodek");
+    const kategorijaOdhodekError  = document.getElementById("kategorijaOdhodekError");
+    const novaKategorijaOdhodek   = document.getElementById("novaKategorijaOdhodek");
+
+    const znesekOdhodek           = document.getElementById("znesekOdhodek");
+    const znesekOdhodekError      = document.getElementById("znesekOdhodekError");
+
+    const datumOdhodek            = document.getElementById("datumOdhodek");
+    const datumOdhodekError       = document.getElementById("datumOdhodekError");
+
+    const opisOdhodek             = document.getElementById("opisOdhodek");
+    const serverMessageOdhodek    = document.getElementById("serverMessageOdhodek");
+
+    function checkKategorijaOdhodek() {
+        if (kategorijaOdhodek.value === "addNew") {
+            if (!novaKategorijaOdhodek.value.trim()) {
+                novaKategorijaOdhodek.classList.add("invalid");
+                kategorijaOdhodekError.innerText = "Vnesite novo kategorijo.";
+                kategorijaOdhodekError.style.display = "block";
+                return;
+            } else {
+                novaKategorijaOdhodek.classList.remove("invalid");
+                kategorijaOdhodekError.style.display = "none";
+            }
+        } else {
+            if (!kategorijaOdhodek.value) {
+                kategorijaOdhodek.classList.add("invalid");
+                kategorijaOdhodekError.innerText = "Izberite kategorijo ali dodajte novo.";
+                kategorijaOdhodekError.style.display = "block";
+                return;
+            } else {
+                kategorijaOdhodek.classList.remove("invalid");
+                kategorijaOdhodekError.style.display = "none";
+            }
+        }
+    }
+    function checkZnesekOdhodek() {
+        const value = znesekOdhodek.value.trim();
+        if (!value) {
+            znesekOdhodek.classList.add("invalid");
+            znesekOdhodekError.innerText = "To polje je obvezno.";
+            znesekOdhodekError.style.display = "block";
+        } else if (isNaN(value) || parseFloat(value) <= 0) {
+            znesekOdhodek.classList.add("invalid");
+            znesekOdhodekError.innerText = "Vnesite veljaven znesek (> 0).";
+            znesekOdhodekError.style.display = "block";
+        } else {
+            znesekOdhodek.classList.remove("invalid");
+            znesekOdhodekError.style.display = "none";
+        }
+    }
+    function checkDatumOdhodek() {
+        if (!datumOdhodek.value.trim()) {
+            datumOdhodek.classList.add("invalid");
+            datumOdhodekError.innerText = "To polje je obvezno.";
+            datumOdhodekError.style.display = "block";
+        } else {
+            datumOdhodek.classList.remove("invalid");
+            datumOdhodekError.style.display = "none";
+        }
+    }
+    kategorijaOdhodek.addEventListener("blur", checkKategorijaOdhodek);
+    znesekOdhodek.addEventListener("blur", checkZnesekOdhodek);
+    datumOdhodek.addEventListener("blur", checkDatumOdhodek);
+
+    document.getElementById("odhodekForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        serverMessageOdhodek.innerText = "";
+        checkKategorijaOdhodek();
+        checkZnesekOdhodek();
+        checkDatumOdhodek();
+
+        if (
+            kategorijaOdhodek.classList.contains("invalid") ||
+            znesekOdhodek.classList.contains("invalid") ||
+            datumOdhodek.classList.contains("invalid")
+        ) {
+            return;
+        }
+        let finalKategorija = "";
+        if (kategorijaOdhodek.value === "addNew") {
+            finalKategorija = novaKategorijaOdhodek.value.trim();
+        } else {
+            finalKategorija = kategorijaOdhodek.options[kategorijaOdhodek.selectedIndex].text;
+        }
+        const tip = document.getElementById("tipOdhodek").value;
+        const podatki = {
+            kategorija: finalKategorija,
+            tip: tip,
+            znesek: znesekOdhodek.value.trim(),
+            datum_transakcije: datumOdhodek.value.trim(),
+            opis: opisOdhodek.value.trim()
+        };
+        try {
+            const response = await fetch("dodajTransakcijo", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(podatki)
+            });
+            const text = await response.text();
+            if(text.startsWith("✅")) {
+                let container = document.getElementById("odhodekContainer");
+                container.classList.add("success");
+                let inputs = container.querySelectorAll("input, textarea");
+                inputs.forEach(function(input) {
+                    input.style.borderColor = "#00ff00";
+                    input.style.boxShadow = "0 0 10px #00ff00, 0 0 20px #00ff00";
+                });
+                let btn = document.getElementById("dodajOdhodekButton");
+                let originalNeon = getComputedStyle(btn).getPropertyValue("--neon-color") || "#5D3FD3";
+                btn.style.setProperty("--neon-color", "#00ff00");
+                btn.style.borderColor = "#00ff00";
+                btn.querySelector("span").style.color = "#00ff00";
+                setTimeout(() => {
+                    container.classList.remove("success");
+                    inputs.forEach(function(input) {
+                        input.style.borderColor = "";
+                        input.style.boxShadow = "";
+                        input.value = "";
+                    });
+                    btn.style.setProperty("--neon-color", originalNeon);
+                    btn.style.borderColor = "";
+                    btn.querySelector("span").style.color = "";
+                    kategorijaOdhodek.value = "";
+                    document.getElementById("novaKategorijaOdhodekGroup").style.display = "none";
+                    novaKategorijaOdhodek.value = "";
+                    serverMessageOdhodek.innerText = "";
+                }, 2000);
+                naloziTransakcije();
+            } else {
+                serverMessageOdhodek.innerText = text;
+            }
+        } catch (error) {
+            serverMessageOdhodek.innerText = "⛔ Napaka pri povezavi s strežnikom.";
+        }
+    });
+
+    // --- DODATNE FUNKCIJE IZ DRUGE KODE ---
 
     // Funkcija za nalaganje in izris transakcij (levi in desni del)
     async function naloziTransakcije() {
@@ -644,34 +987,24 @@
 
             const accountContainer = document.querySelector(".account-container");
             if (parseFloat(balance) >= 0) {
-                // Pozitivno stanje – zelena obroba in animacija
                 accountContainer.style.animation = "fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out";
                 accountContainer.style.borderColor = "#00ff00";
                 document.getElementById("accountBalance").style.color = "#00ff00";
             } else {
-                // Negativno stanje – rdeča obroba in animacija
                 accountContainer.style.animation = "fadeIn 0.6s forwards, glowPulseRed 2s infinite alternate ease-in-out";
                 accountContainer.style.borderColor = "#ff0000";
                 document.getElementById("accountBalance").style.color = "#ff0000";
             }
 
-
-
-            // ... ostala logika naloziTransakcije ostane enaka ...
-// Samo del, kjer v "Moj Račun" izpisuješ vse transakcije, dobi barvanje:
-
+            // Izpis vseh transakcij za "Moj Račun"
             const allTransactionsList = document.getElementById("allTransactionsList");
             allTransactionsList.innerHTML = "";
             data.forEach(t => {
                 let row = document.createElement("div");
                 row.className = "list-item";
-
-                // Določimo barvo tipa glede na "prihodek" ali "odhodek"
                 let tipColor = (t.tip === "prihodek") ? "green" : "red";
-
                 row.innerHTML = `
     <div style="flex-direction: column;">
-      <!-- Tu besedo PRIHODEK/ODHODEK izpišemo z barvo tipColor -->
       <strong style="color: ${tipColor};">${t.tip.toUpperCase()}</strong> - ${t.kategorija}<br>
       Znesek: ${t.znesek} € | Datum: ${t.datum}<br>
       <small>${t.opis || ""}</small>
@@ -737,337 +1070,6 @@
         }
     }
 
-    // Neon efekti za gumbe
-    function addNeonFollow(btn) {
-        btn.addEventListener("mousemove", (e) => {
-            const rect = btn.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            btn.style.setProperty("--x", x + "px");
-            btn.style.setProperty("--y", y + "px");
-        });
-        btn.addEventListener("mouseleave", () => {
-            btn.style.removeProperty("--x");
-            btn.style.removeProperty("--y");
-        });
-    }
-    addNeonFollow(document.getElementById("dodajPrihodekButton"));
-    addNeonFollow(document.getElementById("dodajOdhodekButton"));
-
-    // Pokaži/skrij polje za novo kategorijo (obrazci za dodajanje)
-    function toggleNovaKategorija(selectElem, novaGroupId) {
-        const novaGroup = document.getElementById(novaGroupId);
-        if (selectElem.value === "addNew") {
-            novaGroup.style.display = "block";
-        } else {
-            novaGroup.style.display = "none";
-        }
-    }
-    document.getElementById("kategorijaPrihodek").addEventListener("change", function() {
-        toggleNovaKategorija(this, "novaKategorijaPrihodekGroup");
-    });
-    document.getElementById("kategorijaOdhodek").addEventListener("change", function() {
-        toggleNovaKategorija(this, "novaKategorijaOdhodekGroup");
-    });
-
-    // Validacija in dodajanje PRIHODEK
-    const kategorijaPrihodek = document.getElementById("kategorijaPrihodek");
-    const kategorijaPrihodekError = document.getElementById("kategorijaPrihodekError");
-    const novaKategorijaPrihodek = document.getElementById("novaKategorijaPrihodek");
-    const znesekPrihodek = document.getElementById("znesekPrihodek");
-    const znesekPrihodekError = document.getElementById("znesekPrihodekError");
-    const datumPrihodek = document.getElementById("datumPrihodek");
-    const datumPrihodekError = document.getElementById("datumPrihodekError");
-    const opisPrihodek = document.getElementById("opisPrihodek");
-    const serverMessagePrihodek = document.getElementById("serverMessagePrihodek");
-
-    novaKategorijaPrihodek.addEventListener("blur", function() {
-        if (kategorijaPrihodek.value === "addNew") {
-            if (!novaKategorijaPrihodek.value.trim()) {
-                novaKategorijaPrihodek.classList.add("invalid");
-                kategorijaPrihodekError.innerText = "Vnesite novo kategorijo.";
-                kategorijaPrihodekError.style.display = "block";
-            } else {
-                novaKategorijaPrihodek.classList.remove("invalid");
-                kategorijaPrihodekError.style.display = "none";
-            }
-        }
-    });
-    function checkKategorijaPrihodek() {
-        if (kategorijaPrihodek.value === "addNew") {
-            if (!novaKategorijaPrihodek.value.trim()) {
-                novaKategorijaPrihodek.classList.add("invalid");
-                kategorijaPrihodekError.innerText = "Vnesite novo kategorijo.";
-                kategorijaPrihodekError.style.display = "block";
-                return;
-            } else {
-                novaKategorijaPrihodek.classList.remove("invalid");
-                kategorijaPrihodekError.style.display = "none";
-            }
-        } else {
-            if (!kategorijaPrihodek.value) {
-                kategorijaPrihodek.classList.add("invalid");
-                kategorijaPrihodekError.innerText = "Izberite kategorijo ali dodajte novo.";
-                kategorijaPrihodekError.style.display = "block";
-                return;
-            } else {
-                kategorijaPrihodek.classList.remove("invalid");
-                kategorijaPrihodekError.style.display = "none";
-            }
-        }
-    }
-    function checkZnesekPrihodek() {
-        const value = znesekPrihodek.value.trim();
-        if (!value) {
-            znesekPrihodek.classList.add("invalid");
-            znesekPrihodekError.innerText = "To polje je obvezno.";
-            znesekPrihodekError.style.display = "block";
-        } else if (isNaN(value) || parseFloat(value) <= 0) {
-            znesekPrihodek.classList.add("invalid");
-            znesekPrihodekError.innerText = "Vnesite veljaven znesek (> 0).";
-            znesekPrihodekError.style.display = "block";
-        } else {
-            znesekPrihodek.classList.remove("invalid");
-            znesekPrihodekError.style.display = "none";
-        }
-    }
-    function checkDatumPrihodek() {
-        if (!datumPrihodek.value.trim()) {
-            datumPrihodek.classList.add("invalid");
-            datumPrihodekError.innerText = "To polje je obvezno.";
-            datumPrihodekError.style.display = "block";
-        } else {
-            datumPrihodek.classList.remove("invalid");
-            datumPrihodekError.style.display = "none";
-        }
-    }
-    znesekPrihodek.addEventListener("blur", checkZnesekPrihodek);
-    datumPrihodek.addEventListener("blur", checkDatumPrihodek);
-
-    document.getElementById("prihodekForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        serverMessagePrihodek.innerText = "";
-        checkKategorijaPrihodek();
-        checkZnesekPrihodek();
-        checkDatumPrihodek();
-
-        if (
-            kategorijaPrihodek.classList.contains("invalid") ||
-            znesekPrihodek.classList.contains("invalid") ||
-            datumPrihodek.classList.contains("invalid")
-        ) {
-            return;
-        }
-
-        let finalKategorija = "";
-        if (kategorijaPrihodek.value === "addNew") {
-            finalKategorija = novaKategorijaPrihodek.value.trim();
-        } else {
-            finalKategorija = kategorijaPrihodek.options[kategorijaPrihodek.selectedIndex].text;
-        }
-
-        const tip = document.getElementById("tipPrihodek").value;
-        const podatki = {
-            kategorija: finalKategorija,
-            tip: tip,
-            znesek: znesekPrihodek.value.trim(),
-            datum_transakcije: datumPrihodek.value.trim(),
-            opis: opisPrihodek.value.trim()
-        };
-        try {
-            const response = await fetch("dodajTransakcijo", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(podatki)
-            });
-            const text = await response.text();
-            if(text.startsWith("✅")) {
-                let container = document.getElementById("prihodekContainer");
-                container.classList.add("success");
-                let inputs = container.querySelectorAll("input, textarea");
-                inputs.forEach(function(input) {
-                    input.style.borderColor = "#00ff00";
-                    input.style.boxShadow = "0 0 10px #00ff00, 0 0 20px #00ff00";
-                });
-                let btn = document.getElementById("dodajPrihodekButton");
-                let originalNeon = getComputedStyle(btn).getPropertyValue("--neon-color") || "#5D3FD3";
-                btn.style.setProperty("--neon-color", "#00ff00");
-                btn.style.borderColor = "#00ff00";
-                btn.querySelector("span").style.color = "#00ff00";
-
-                setTimeout(() => {
-                    container.classList.remove("success");
-                    inputs.forEach(function(input) {
-                        input.style.borderColor = "";
-                        input.style.boxShadow = "";
-                        input.value = "";
-                    });
-                    btn.style.setProperty("--neon-color", originalNeon);
-                    btn.style.borderColor = "";
-                    btn.querySelector("span").style.color = "";
-                    kategorijaPrihodek.value = "";
-                    document.getElementById("novaKategorijaPrihodekGroup").style.display = "none";
-                    novaKategorijaPrihodek.value = "";
-                    serverMessagePrihodek.innerText = "";
-                }, 2000);
-
-                naloziTransakcije();
-            } else {
-                serverMessagePrihodek.innerText = text;
-            }
-        } catch (error) {
-            serverMessagePrihodek.innerText = "⛔ Napaka pri povezavi s strežnikom.";
-        }
-    });
-
-    // Validacija in dodajanje ODHODEK
-    const kategorijaOdhodek = document.getElementById("kategorijaOdhodek");
-    const kategorijaOdhodekError = document.getElementById("kategorijaOdhodekError");
-    const novaKategorijaOdhodek = document.getElementById("novaKategorijaOdhodek");
-    const znesekOdhodek = document.getElementById("znesekOdhodek");
-    const znesekOdhodekError = document.getElementById("znesekOdhodekError");
-    const datumOdhodek = document.getElementById("datumOdhodek");
-    const datumOdhodekError = document.getElementById("datumOdhodekError");
-    const opisOdhodek = document.getElementById("opisOdhodek");
-    const serverMessageOdhodek = document.getElementById("serverMessageOdhodek");
-
-    novaKategorijaOdhodek.addEventListener("blur", function() {
-        if (kategorijaOdhodek.value === "addNew") {
-            if (!novaKategorijaOdhodek.value.trim()) {
-                novaKategorijaOdhodek.classList.add("invalid");
-                kategorijaOdhodekError.innerText = "Vnesite novo kategorijo.";
-                kategorijaOdhodekError.style.display = "block";
-            } else {
-                novaKategorijaOdhodek.classList.remove("invalid");
-                kategorijaOdhodekError.style.display = "none";
-            }
-        }
-    });
-    function checkKategorijaOdhodek() {
-        if (kategorijaOdhodek.value === "addNew") {
-            if (!novaKategorijaOdhodek.value.trim()) {
-                novaKategorijaOdhodek.classList.add("invalid");
-                kategorijaOdhodekError.innerText = "Vnesite novo kategorijo.";
-                kategorijaOdhodekError.style.display = "block";
-                return;
-            } else {
-                novaKategorijaOdhodek.classList.remove("invalid");
-                kategorijaOdhodekError.style.display = "none";
-            }
-        } else {
-            if (!kategorijaOdhodek.value) {
-                kategorijaOdhodek.classList.add("invalid");
-                kategorijaOdhodekError.innerText = "Izberite kategorijo ali dodajte novo.";
-                kategorijaOdhodekError.style.display = "block";
-                return;
-            } else {
-                kategorijaOdhodek.classList.remove("invalid");
-                kategorijaOdhodekError.style.display = "none";
-            }
-        }
-    }
-    function checkZnesekOdhodek() {
-        const value = znesekOdhodek.value.trim();
-        if (!value) {
-            znesekOdhodek.classList.add("invalid");
-            znesekOdhodekError.innerText = "To polje je obvezno.";
-            znesekOdhodekError.style.display = "block";
-        } else if (isNaN(value) || parseFloat(value) <= 0) {
-            znesekOdhodek.classList.add("invalid");
-            znesekOdhodekError.innerText = "Vnesite veljaven znesek (> 0).";
-            znesekOdhodekError.style.display = "block";
-        } else {
-            znesekOdhodek.classList.remove("invalid");
-            znesekOdhodekError.style.display = "none";
-        }
-    }
-    function checkDatumOdhodek() {
-        if (!datumOdhodek.value.trim()) {
-            datumOdhodek.classList.add("invalid");
-            datumOdhodekError.innerText = "To polje je obvezno.";
-            datumOdhodekError.style.display = "block";
-        } else {
-            datumOdhodek.classList.remove("invalid");
-            datumOdhodekError.style.display = "none";
-        }
-    }
-    znesekOdhodek.addEventListener("blur", checkZnesekOdhodek);
-    datumOdhodek.addEventListener("blur", checkDatumOdhodek);
-
-    document.getElementById("odhodekForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        serverMessageOdhodek.innerText = "";
-        checkKategorijaOdhodek();
-        checkZnesekOdhodek();
-        checkDatumOdhodek();
-
-        if (
-            kategorijaOdhodek.classList.contains("invalid") ||
-            znesekOdhodek.classList.contains("invalid") ||
-            datumOdhodek.classList.contains("invalid")
-        ) {
-            return;
-        }
-
-        let finalKategorija = "";
-        if (kategorijaOdhodek.value === "addNew") {
-            finalKategorija = novaKategorijaOdhodek.value.trim();
-        } else {
-            finalKategorija = kategorijaOdhodek.options[kategorijaOdhodek.selectedIndex].text;
-        }
-
-        const tip = document.getElementById("tipOdhodek").value;
-        const podatki = {
-            kategorija: finalKategorija,
-            tip: tip,
-            znesek: znesekOdhodek.value.trim(),
-            datum_transakcije: datumOdhodek.value.trim(),
-            opis: opisOdhodek.value.trim()
-        };
-        try {
-            const response = await fetch("dodajTransakcijo", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(podatki)
-            });
-            const text = await response.text();
-            if(text.startsWith("✅")) {
-                let container = document.getElementById("odhodekContainer");
-                container.classList.add("success");
-                let inputs = container.querySelectorAll("input, textarea");
-                inputs.forEach(function(input) {
-                    input.style.borderColor = "#00ff00";
-                    input.style.boxShadow = "0 0 10px #00ff00, 0 0 20px #00ff00";
-                });
-                let btn = document.getElementById("dodajOdhodekButton");
-                let originalNeon = getComputedStyle(btn).getPropertyValue("--neon-color") || "#5D3FD3";
-                btn.style.setProperty("--neon-color", "#00ff00");
-                btn.style.borderColor = "#00ff00";
-                btn.querySelector("span").style.color = "#00ff00";
-                setTimeout(() => {
-                    container.classList.remove("success");
-                    inputs.forEach(function(input) {
-                        input.style.borderColor = "";
-                        input.style.boxShadow = "";
-                        input.value = "";
-                    });
-                    btn.style.setProperty("--neon-color", originalNeon);
-                    btn.style.borderColor = "";
-                    btn.querySelector("span").style.color = "";
-                    kategorijaOdhodek.value = "";
-                    document.getElementById("novaKategorijaOdhodekGroup").style.display = "none";
-                    novaKategorijaOdhodek.value = "";
-                    serverMessageOdhodek.innerText = "";
-                }, 2000);
-                naloziTransakcije();
-            } else {
-                serverMessageOdhodek.innerText = text;
-            }
-        } catch (error) {
-            serverMessageOdhodek.innerText = "⛔ Napaka pri povezavi s strežnikom.";
-        }
-    });
-
     // Modal – Zapiranje modala
     document.getElementById("btnCancel").addEventListener("click", function() {
         document.getElementById("editModal").style.display = "none";
@@ -1116,5 +1118,6 @@
         window.location.href = "logout";
     });
 </script>
+
 </body>
 </html>

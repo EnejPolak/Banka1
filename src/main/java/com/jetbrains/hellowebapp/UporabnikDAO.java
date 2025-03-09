@@ -1,68 +1,80 @@
 package com.jetbrains.hellowebapp;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.sql.Types;
 
 public class UporabnikDAO {
 
-    // 🔹 Registracija uporabnika
-    public static boolean registrirajUporabnika(String ime, String ePosta, String geslo) {
-        if (preveriCeEPostaObstaja(ePosta)) {
-            System.out.println("⛔ E-pošta že obstaja! Izberite drugo.");
-            return false;
-        }
+    /**
+     * Registracija uporabnika preko stored procedure sp_registriraj_uporabnika.
+     * Sprejme ime, e-pošto, geslo (v čisti obliki) in id države.
+     *
+     * @param ime      Ime uporabnika.
+     * @param ePosta   E-poštni naslov.
+     * @param geslo    Geslo v čisti obliki.
+     * @param drzavaId Id države, ki ga je izbral uporabnik.
+     * @return true, če je registracija uspešna, sicer false.
+     */
+    public static boolean registrirajUporabnika(String ime, String ePosta, String geslo, int drzavaId) {
+        String gesloHash = hashirajGeslo(geslo);
+        // Uporabljamo stored procedure, zato ne uporabljamo SQL INSERT neposredno.
+        String callSQL = "{ ? = call sp_registriraj_uporabnika(?, ?, ?, ?) }";
+        try (Connection conn = PovezavaZBazo.connect();
+             CallableStatement cstmt = conn.prepareCall(callSQL)) {
 
-        String gesloHash = zakodirajGeslo(geslo);
-        String poizvedba = "INSERT INTO uporabniki (ime, email, geslo_hash) VALUES (?, ?, ?)";
+            // Prvi parameter je izhodni, tip BOOLEAN.
+            cstmt.registerOutParameter(1, Types.BOOLEAN);
+            cstmt.setString(2, ime);
+            cstmt.setString(3, ePosta);
+            cstmt.setString(4, gesloHash);
+            cstmt.setInt(5, drzavaId);
 
-        try (Connection povezava = PovezavaZBazo.connect();
-             PreparedStatement stavek = povezava.prepareStatement(poizvedba)) {
-
-            stavek.setString(1, ime);
-            stavek.setString(2, ePosta);
-            stavek.setString(3, gesloHash);
-
-            int vrsticeVstavljene = stavek.executeUpdate();
-            return vrsticeVstavljene > 0;
-
+            cstmt.execute();
+            return cstmt.getBoolean(1);
         } catch (SQLException e) {
             System.out.println("⛔ Napaka pri registraciji: " + e.getMessage());
             return false;
         }
     }
 
-    // 🔹 Preveri, ali e-pošta že obstaja v bazi
-    private static boolean preveriCeEPostaObstaja(String ePosta) {
-        String poizvedba = "SELECT id FROM uporabniki WHERE email = ?";
+    /**
+     * Prijava uporabnika preko stored procedure sp_prijava.
+     */
+    public static int prijava(String email, String geslo) {
+        String gesloHash = hashirajGeslo(geslo);
+        String callSQL = "{ ? = call sp_prijava(?, ?) }";
 
-        try (Connection povezava = PovezavaZBazo.connect();
-             PreparedStatement stavek = povezava.prepareStatement(poizvedba)) {
+        try (Connection conn = PovezavaZBazo.connect();
+             CallableStatement cstmt = conn.prepareCall(callSQL)) {
 
-            stavek.setString(1, ePosta);
-            ResultSet rezultat = stavek.executeQuery();
-            return rezultat.next(); // Če obstaja vrstica, e-pošta že obstaja
+            // Prvi parameter je izhodni, tip INTEGER.
+            cstmt.registerOutParameter(1, Types.INTEGER);
+            cstmt.setString(2, email);
+            cstmt.setString(3, gesloHash);
 
+            cstmt.execute();
+            return cstmt.getInt(1);
         } catch (SQLException e) {
-            System.out.println("⛔ Napaka pri preverjanju e-pošte: " + e.getMessage());
-            return true;
+            System.out.println("⛔ Napaka pri prijavi: " + e.getMessage());
+            return -1;
         }
     }
 
-    // 🔹 Funkcija za zakodiranje gesla
-    private static String zakodirajGeslo(String geslo) {
+    /**
+     * Funkcija za zakodiranje gesla z uporabo SHA-256.
+     */
+    public static String hashirajGeslo(String geslo) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] zakodirano = md.digest(geslo.getBytes());
-            StringBuilder zakodiranoBesedilo = new StringBuilder();
-            for (byte b : zakodirano) {
-                zakodiranoBesedilo.append(String.format("%02x", b));
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(geslo.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
             }
-            return zakodiranoBesedilo.toString();
-        } catch (NoSuchAlgorithmException e) {
+            return hexString.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
             System.out.println("⛔ Napaka pri kodiranju gesla: " + e.getMessage());
             return null;
         }

@@ -15,7 +15,6 @@
             font-family: Arial, sans-serif;
             color: #fff;
         }
-
         .register-container {
             background-color: #111;
             border-radius: 10px;
@@ -27,16 +26,12 @@
             transform: translateY(-10px);
             animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
         }
-
-        /* Rdeča animacija ob napaki (od strežnika) */
         .register-container.error {
             animation: fadeIn 0.6s forwards, glowPulseRed 2s infinite alternate ease-in-out !important;
         }
-        /* Zelena animacija ob uspehu */
         .register-container.success {
             animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
         }
-
         @keyframes fadeIn {
             to {
                 opacity: 1;
@@ -44,30 +39,17 @@
             }
         }
         @keyframes glowPulsePurple {
-            0% {
-                box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
-            }
-            100% {
-                box-shadow: 0 0 20px #5D3FD3, 0 0 40px #5D3FD3;
-            }
+            0% { box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3; }
+            100% { box-shadow: 0 0 20px #5D3FD3, 0 0 40px #5D3FD3; }
         }
         @keyframes glowPulseRed {
-            0% {
-                box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
-            }
-            100% {
-                box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
-            }
+            0% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+            100% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
         }
         @keyframes glowPulseGreen {
-            0% {
-                box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
-            }
-            100% {
-                box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
-            }
+            0% { box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
+            100% { box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
         }
-
         .register-container h2 {
             margin-bottom: 1.5rem;
             text-shadow: 0 0 3px #5D3FD3;
@@ -77,9 +59,7 @@
             flex-direction: column;
             align-items: center;
         }
-
-        .register-container input {
-            /* NE uporabljamo required, ker preverjamo ročno */
+        .register-container input, select#drzavaField {
             width: 80%;
             max-width: 280px;
             padding: 0.75rem;
@@ -92,21 +72,17 @@
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        .register-container input:hover {
+        .register-container input:hover, select#drzavaField:hover {
             border-color: #5D3FD3;
         }
-        .register-container input:focus {
+        .register-container input:focus, select#drzavaField:focus {
             border-color: #5D3FD3;
             box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
         }
-
-        /* Rdeča obroba pri neveljavnem polju (client-side ali server-side napaka) */
         .invalid {
             border-color: #ff0000 !important;
             box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
         }
-
-        /* Sporočila o napaki (client-side ali server-side) */
         .error-message {
             color: #ff0000;
             font-size: 0.9rem;
@@ -123,8 +99,6 @@
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
-
-        /* Gumbi */
         .neon-btn {
             position: relative;
             background: #111;
@@ -180,14 +154,11 @@
             border-color: #00ff00 !important;
             box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
         }
-
-        /* Dodano: Input group za geslo z gumbom za prikaz/skrij */
         .input-group {
             position: relative;
             width: 80%;
             max-width: 280px;
             margin: 0.5rem 0;
-            margin-left: -25px;
         }
         .input-group input {
             width: 100%;
@@ -199,7 +170,6 @@
             font-size: 1rem;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            margin: 0;
         }
         .toggle-password-btn {
             position: absolute;
@@ -217,6 +187,7 @@
             color: #fff;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <div class="register-container" id="registerContainer">
@@ -228,7 +199,13 @@
         <input type="text" id="emailField" placeholder="E-pošta">
         <div id="emailError" class="error-message"></div>
 
-        <!-- Spremenjeno: Input group za geslo z gumbom za prikaz/skrij -->
+        <!-- Dropdown meni za izbiro države/kraja -->
+        <select id="drzavaField" name="drzava">
+            <option value="">Izberi državo</option>
+        </select>
+        <div id="drzavaError" class="error-message"></div>
+
+        <!-- Input group za geslo s gumbom za prikaz/skrij -->
         <div class="input-group">
             <input type="password" id="gesloField" placeholder="Geslo">
             <span id="togglePasswordButton" class="toggle-password-btn">Prikazi</span>
@@ -246,7 +223,7 @@
 </div>
 
 <script>
-    // Funkcija za neon efekt gumbov
+    // Neon efekt gumbov
     function addNeonFollow(btn) {
         btn.addEventListener("mousemove", (e) => {
             const rect = btn.getBoundingClientRect();
@@ -260,20 +237,44 @@
             btn.style.removeProperty("--y");
         });
     }
-
-    const registerBtn       = document.getElementById("registerButton");
-    const prijavaBtn        = document.getElementById("prijavaButton");
+    const registerBtn = document.getElementById("registerButton");
+    const prijavaBtn = document.getElementById("prijavaButton");
     const registerContainer = document.getElementById("registerContainer");
-    const imeField          = document.getElementById("imeField");
-    const imeError          = document.getElementById("imeError");
-    const emailField        = document.getElementById("emailField");
-    const emailError        = document.getElementById("emailError");
-    const gesloField        = document.getElementById("gesloField");
-    const gesloError        = document.getElementById("gesloError");
-    const serverMsg         = document.getElementById("serverMessage");
+    const imeField = document.getElementById("imeField");
+    const imeError = document.getElementById("imeError");
+    const emailField = document.getElementById("emailField");
+    const emailError = document.getElementById("emailError");
+    const drzavaField = document.getElementById("drzavaField");
+    const drzavaError = document.getElementById("drzavaError");
+    const gesloField = document.getElementById("gesloField");
+    const gesloError = document.getElementById("gesloError");
+    const serverMsg = document.getElementById("serverMessage");
 
     addNeonFollow(registerBtn);
     addNeonFollow(prijavaBtn);
+
+    // Naloži države v dropdown meni prek AJAX klica na endpoint /dobiKraje
+    $(document).ready(function(){
+        $.ajax({
+            url: '/dobiKrajeServlet',
+            type: 'GET',
+            success: function(data){
+                $.each(data, function(i, item) {
+                    // Prikaz: ime (postna_st)
+                    const displayText = item.ime + " (" + item.postna_st + ")";
+                    $('#drzavaField').append(
+                        $('<option>', {
+                            value: item.id,
+                            text: displayText
+                        })
+                    );
+                });
+            },
+            error: function(err){
+                console.error("Napaka pri nalaganju držav/krajev:", err);
+            }
+        });
+    });
 
     // Preusmeritev na prijavo
     prijavaBtn.addEventListener("click", () => {
@@ -281,15 +282,10 @@
     });
 
     // Preverjanje ob BLUR
-    imeField.addEventListener("blur", () => {
-        checkIme();
-    });
-    emailField.addEventListener("blur", () => {
-        checkEmail();
-    });
-    gesloField.addEventListener("blur", () => {
-        checkGeslo();
-    });
+    imeField.addEventListener("blur", checkIme);
+    emailField.addEventListener("blur", checkEmail);
+    gesloField.addEventListener("blur", checkGeslo);
+    drzavaField.addEventListener("blur", checkDrzava);
 
     function checkIme() {
         const value = imeField.value.trim();
@@ -302,7 +298,6 @@
             imeError.style.display = "none";
         }
     }
-
     function checkEmail() {
         const value = emailField.value.trim();
         if (!value) {
@@ -318,7 +313,17 @@
             emailError.style.display = "none";
         }
     }
-
+    function checkDrzava() {
+        const value = drzavaField.value;
+        if (!value) {
+            drzavaField.classList.add("invalid");
+            drzavaError.innerText = "Prosimo, izberite državo.";
+            drzavaError.style.display = "block";
+        } else {
+            drzavaField.classList.remove("invalid");
+            drzavaError.style.display = "none";
+        }
+    }
     function checkGeslo() {
         const value = gesloField.value.trim();
         if (!value) {
@@ -334,7 +339,6 @@
             gesloError.style.display = "none";
         }
     }
-
     // Funkcionalnost za prikaz/skritje gesla
     const togglePasswordButton = document.getElementById("togglePasswordButton");
     togglePasswordButton.addEventListener("click", () => {
@@ -346,7 +350,6 @@
             togglePasswordButton.textContent = "Prikazi";
         }
     });
-
     // Ob SUBMIT-u preverjanje in pošiljanje na strežnik
     document.getElementById("registracijaForm").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -357,30 +360,32 @@
         checkIme();
         checkEmail();
         checkGeslo();
+        checkDrzava();
 
         if (
             imeField.classList.contains("invalid") ||
             emailField.classList.contains("invalid") ||
-            gesloField.classList.contains("invalid")
+            gesloField.classList.contains("invalid") ||
+            drzavaField.classList.contains("invalid")
         ) {
             return;
         }
 
         try {
-            const ime   = imeField.value.trim();
+            const ime = imeField.value.trim();
             const email = emailField.value.trim();
             const geslo = gesloField.value.trim();
+            const drzava = drzavaField.value;  // id države
 
             const response = await fetch("http://localhost:8080/Banka3_war_exploded/registracija", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ ime, email, geslo })
+                body: new URLSearchParams({ ime, email, geslo, drzava })
             });
             const data = await response.json();
 
             if (data.status === "error") {
                 registerContainer.classList.add("error");
-
                 if (data.field === "ime") {
                     imeField.classList.add("invalid");
                     imeError.innerText = data.message;
@@ -396,16 +401,20 @@
                     gesloError.innerText = data.message;
                     gesloError.style.display = "block";
                 }
+                if (data.field === "drzava") {
+                    drzavaField.classList.add("invalid");
+                    drzavaError.innerText = data.message;
+                    drzavaError.style.display = "block";
+                }
                 if (data.field === "server") {
                     serverMsg.innerText = data.message;
                 }
             } else if (data.status === "success") {
                 registerContainer.classList.add("success");
-
                 imeField.classList.add("valid");
                 emailField.classList.add("valid");
                 gesloField.classList.add("valid");
-
+                drzavaField.classList.add("valid");
                 setTimeout(() => {
                     window.location.href = "Prijava.html";
                 }, 3000);

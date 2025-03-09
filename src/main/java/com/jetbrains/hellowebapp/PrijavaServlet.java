@@ -5,14 +5,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession; // Dodajte ta import!
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 @WebServlet("/prijava")
 public class PrijavaServlet extends HttpServlet {
@@ -30,31 +31,28 @@ public class PrijavaServlet extends HttpServlet {
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Prilagojena SQL poizvedba, ki vrne tudi uporabniški ID
-        String sql = "SELECT id, geslo_hash FROM uporabniki WHERE email = ?";
+        // Kliči stored procedure sp_prijava namesto SELECT
+        String callSQL = "{ ? = call sp_prijava(?, ?) }";
         try (Connection povezava = PovezavaZBazo.connect();
-             PreparedStatement stmt = povezava.prepareStatement(sql)) {
+             CallableStatement cstmt = povezava.prepareCall(callSQL)) {
 
-            stmt.setString(1, email);
-            try (ResultSet rezultat = stmt.executeQuery()) {
-                if (!rezultat.next()) {
-                    out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"Neveljaven e-poštni naslov\"}");
-                    return;
-                } else {
-                    int uporabnikId = rezultat.getInt("id");
-                    String hashIzBaze = rezultat.getString("geslo_hash");
-                    if (!hashiranoGeslo.equals(hashIzBaze)) {
-                        out.println("{\"status\":\"error\", \"field\":\"geslo\", \"message\":\"Nepravilno geslo\"}");
-                        return;
-                    } else {
-                        // Ustvari sejo in shrani uporabniški ID (uporabite Integer.valueOf, če se pojavijo težave)
-                        HttpSession session = request.getSession();
-                        session.setAttribute("uporabnikId", Integer.valueOf(uporabnikId));
-                        out.println("{\"status\":\"success\", \"message\":\"success\"}");
-                    }
-                }
+            // Registriraj izhodni parameter (vrne INT)
+            cstmt.registerOutParameter(1, Types.INTEGER);
+            cstmt.setString(2, email);
+            cstmt.setString(3, hashiranoGeslo);
+
+            cstmt.execute();
+            int uporabnikId = cstmt.getInt(1);
+            if (uporabnikId == -1) {
+                out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"Neveljaven e-poštni naslov ali geslo\"}");
+                return;
+            } else {
+                // Ustvari sejo in shrani uporabniški ID
+                HttpSession session = request.getSession();
+                session.setAttribute("uporabnikId", Integer.valueOf(uporabnikId));
+                out.println("{\"status\":\"success\", \"message\":\"Prijava uspešna\"}");
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.err.println("⛔ Napaka pri prijavi: " + e.getMessage());
             out.println("{\"status\":\"error\", \"field\":\"server\", \"message\":\"Napaka pri strežniku\"}");
         }
@@ -74,5 +72,3 @@ public class PrijavaServlet extends HttpServlet {
         }
     }
 }
-
-

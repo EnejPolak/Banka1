@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.IOException;
@@ -18,11 +19,19 @@ public class DobiTransakcijeServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // Preverjanje, če je uporabnik prijavljen
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("uporabnikId") == null) {
+            response.sendRedirect("Prijava.html");
+            return;
+        }
+        int uporabnikId = (int) session.getAttribute("uporabnikId");
+
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Predpostavimo, da za demonstracijo dobimo transakcije za uporabnika z ID 1.
-        List<Transakcija> transakcije = TransakcijeDAO.getAllTransactionsForUser(1);
+        // Pridobi transakcije samo za prijavljenega uporabnika
+        List<Transakcija> transakcije = TransakcijeDAO.getAllTransactionsForUser(uporabnikId);
 
         JSONArray jsonArray = new JSONArray();
         for (Transakcija t : transakcije) {
@@ -39,3 +48,4 @@ public class DobiTransakcijeServlet extends HttpServlet {
         out.flush();
     }
 }
+

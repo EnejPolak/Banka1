@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession; // Dodajte ta import!
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
@@ -19,36 +20,36 @@ public class PrijavaServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Pridobi podatke iz HTML obrazca
+        // Pridobi podatke iz obrazca
         String email = request.getParameter("email");
         String geslo = request.getParameter("geslo");
 
-        // Hashiraj vneseno geslo
+        // Hashiraj geslo
         String hashiranoGeslo = hashirajGeslo(geslo);
 
-        // Nastavi Content-Type na JSON
         response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        // Preveri, ali uporabnik s podano e-pošto obstaja in vrne hash gesla
-        String sql = "SELECT geslo_hash FROM uporabniki WHERE email = ?";
+        // Prilagojena SQL poizvedba, ki vrne tudi uporabniški ID
+        String sql = "SELECT id, geslo_hash FROM uporabniki WHERE email = ?";
         try (Connection povezava = PovezavaZBazo.connect();
              PreparedStatement stmt = povezava.prepareStatement(sql)) {
 
             stmt.setString(1, email);
             try (ResultSet rezultat = stmt.executeQuery()) {
                 if (!rezultat.next()) {
-                    // Uporabnik s podano e-pošto ne obstaja
                     out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"Neveljaven e-poštni naslov\"}");
                     return;
                 } else {
-                    // Uporabnik obstaja, preveri geslo
+                    int uporabnikId = rezultat.getInt("id");
                     String hashIzBaze = rezultat.getString("geslo_hash");
                     if (!hashiranoGeslo.equals(hashIzBaze)) {
                         out.println("{\"status\":\"error\", \"field\":\"geslo\", \"message\":\"Nepravilno geslo\"}");
                         return;
                     } else {
-                        // Uspešna prijava, vrnemo JSON odgovor z "success"
+                        // Ustvari sejo in shrani uporabniški ID (uporabite Integer.valueOf, če se pojavijo težave)
+                        HttpSession session = request.getSession();
+                        session.setAttribute("uporabnikId", Integer.valueOf(uporabnikId));
                         out.println("{\"status\":\"success\", \"message\":\"success\"}");
                     }
                 }
@@ -73,3 +74,5 @@ public class PrijavaServlet extends HttpServlet {
         }
     }
 }
+
+

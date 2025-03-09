@@ -508,7 +508,11 @@
         </form>
     </div>
 </div>
-
+<div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <button id="logoutButton" class="neon-btn" style="width: 150px; padding: 0.5rem 1rem;">
+        <span>Odjavi</span>
+    </button>
+</div>
 <script>
     // Ob nalaganju strani
     document.addEventListener("DOMContentLoaded", () => {
@@ -1106,6 +1110,10 @@
         } catch (error) {
             alert("⛔ Napaka pri povezavi s strežnikom.");
         }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", function() {
+        window.location.href = "logout";
     });
 </script>
 </body>

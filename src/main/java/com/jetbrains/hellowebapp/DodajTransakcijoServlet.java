@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -19,6 +20,15 @@ public class DodajTransakcijoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // Preverjanje seje
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("uporabnikId") == null) {
+            response.sendRedirect("Prijava.html");
+            return;
+        }
+        int uporabnikId = (int) session.getAttribute("uporabnikId");
+
         response.setContentType("text/plain; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
@@ -56,7 +66,6 @@ public class DodajTransakcijoServlet extends HttpServlet {
             return;
         }
 
-        int uporabnikId = 1;
         int kategorijaId = KategorijeDAO.getOrCreateCategory(uporabnikId, kategorija.trim(), tip.trim());
         if (kategorijaId == -1) {
             out.println("⛔ Napaka: Kategorija ni bila ustvarjena.");
@@ -85,3 +94,5 @@ public class DodajTransakcijoServlet extends HttpServlet {
         }
     }
 }
+
+

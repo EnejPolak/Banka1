@@ -2,32 +2,81 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <title>Dodaj transakcije</title>
+    <title>Tvoj Račun - Transakcije</title>
     <style>
         :root {
             --neon-color: #5D3FD3;
         }
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             background-color: #1a1b1b;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-family: Arial, sans-serif;
             color: #fff;
+            min-height: 100vh;
         }
-        .container-flex {
+
+        /* Glavni container: dva stolpca */
+        .container-row {
             display: flex;
             gap: 2rem;
+            padding: 2rem;
         }
-        /* Transaction container – osnovni neon učinek */
+        .left-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Container za Moj Račun */
+        .account-container {
+            background-color: #111;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 500px; /* Spremenjeno na 500px */
+            margin: 0 auto;
+            box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+            animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
+            text-align: center;
+        }
+        .account-container h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 3px var(--neon-color);
+        }
+        /* "Status" večji in levo poravnan */
+        .account-container .status-line {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .account-container .list-item {
+            margin-bottom: 0.5rem;
+            border: 1px solid #444;
+            padding: 0.5rem;
+            border-radius: 5px;
+            background-color: #222;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        /* Obstoječi slogi */
         .transaction-container {
             background-color: #111;
             border-radius: 10px;
             padding: 2rem;
-            width: 320px;
+            /* večja širina */
+            width: 400px;
             text-align: center;
             box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
             opacity: 0;
@@ -35,15 +84,25 @@
             animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
             transition: box-shadow 0.3s ease, border-color 0.3s ease;
         }
+        .list-container {
+            background-color: #111;
+            border-radius: 10px;
+            padding: 2rem;
+            /* večja širina */
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+            transition: box-shadow 0.3s ease;
+        }
+        .transaction-container.success {
+            animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
+        }
         @keyframes fadeIn {
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glowPulsePurple {
             0% { box-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color); }
             100% { box-shadow: 0 0 20px var(--neon-color), 0 0 40px var(--neon-color); }
-        }
-        .transaction-container.success {
-            animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
         }
         @keyframes glowPulseGreen {
             0% { box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
@@ -95,15 +154,10 @@
             box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
         }
         .error-message {
-            margin: 0.25rem 0 0 0;
+            margin-top: 0.25rem;
             color: #ff0000;
             font-size: 0.9rem;
             display: none;
-            animation: slideInLeft 0.5s ease-out;
-        }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
         }
         .neon-btn {
             position: relative;
@@ -124,10 +178,8 @@
         .neon-btn::before {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), var(--neon-color), transparent 80%);
             transition: background 0.15s ease;
@@ -137,10 +189,7 @@
         .neon-btn::after {
             content: "";
             position: absolute;
-            top: 3px;
-            left: 3px;
-            right: 3px;
-            bottom: 3px;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
             background: #111;
             border-radius: 4px;
             z-index: 1;
@@ -155,98 +204,338 @@
             color: var(--neon-color);
             text-shadow: 0 0 5px var(--neon-color), 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
         }
+        .list-container h2 {
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 3px var(--neon-color);
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .list-item:hover {
+            border-color: var(--neon-color);
+        }
+        .list-item-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-right: 1rem;
+        }
+        .list-item-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        .list-item-price-prihodek {
+            color: #00ff00;
+            margin-bottom: 0.25rem;
+        }
+        .list-item-price-odhodek {
+            color: #ff0000;
+            margin-bottom: 0.25rem;
+        }
+        .list-item-desc {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .list-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .list-edit-btn {
+            --neon-color: #ffa500;
+        }
+        .list-delete-btn {
+            --neon-color: #ff3333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #111;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #444;
+            width: 300px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .modal-content label {
+            display: block;
+            margin-top: 10px;
+        }
+        .modal-content select,
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #222;
+            color: #fff;
+        }
+        .modal-buttons {
+            margin-top: 15px;
+            text-align: center;
+        }
+        #btnUpdate {
+            background-color: #00ff00;
+            color: #000;
+        }
+        #btnCancel {
+            background-color: #ff3333;
+            color: #fff;
+        }
+
+        /* Dodano: da sta "Dodaj prihodek" in "Dodaj odhodek" vodoravno, enako za "Moji prihodki" in "Moji odhodki" */
+        .container-add {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: nowrap; /* ohrani v isti vrstici */
+            justify-content: center;
+        }
+        .container-lists {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        /* Lep "neon" videz za gumbe v pop-upu */
+        .modal-buttons button {
+            position: relative;
+            background: #111;
+            border: 3px solid #000001;
+            border-radius: 6px;
+            color: #000001;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            outline: none;
+            overflow: hidden;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .modal-buttons button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), var(--neon-color), transparent 80%);
+            transition: background 0.15s ease;
+            z-index: 0;
+            mix-blend-mode: screen;
+        }
+
+        .modal-buttons button::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: #111;
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .modal-buttons button span {
+            position: relative;
+            z-index: 2;
+            color: #000001;
+            transition: text-shadow 0.15s ease, color 0.15s ease;
+        }
+
+        .modal-buttons button:hover span {
+            color: var(--neon-color);
+            text-shadow: 0 0 5px var(--neon-color), 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+        }
+
+        /* Posebej za "Popravi" in "Zavrzi" (če želiš drugačno barvo ozadja) */
+        #btnUpdate {
+            background-color: #00ff00;
+            color: #000;
+        }
+
+        #btnCancel {
+            background-color: #ff3333;
+            color: #fff;
+        }
+        /* Prepišemo hover barvo samo za #btnUpdate (zelena) in #btnCancel (rdeča) */
+        #btnUpdate:hover span {
+            color: #00ff00 !important;
+            text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
+        }
+        #btnCancel:hover span {
+            color: #ff0000 !important;
+            text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
+        }
+        @keyframes glowPulseRed {
+            0% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+            100% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+        }
     </style>
 </head>
 <body>
-<div class="container-flex">
 
-    <!-- DODAJ PRIHODEK -->
-    <div class="transaction-container" id="prihodekContainer">
-        <h2>Dodaj prihodek</h2>
-        <form id="prihodekForm">
-            <input type="hidden" id="tipPrihodek" value="prihodek">
-            <div class="form-group">
-                <select id="kategorijaPrihodek"></select>
-                <div id="kategorijaPrihodekError" class="error-message"></div>
+<div class="container-row">
+    <!-- LEVI DEL: Obrazci in seznami -->
+    <div class="left-column">
+        <div class="container-add">
+            <!-- Dodaj prihodek -->
+            <div class="transaction-container" id="prihodekContainer">
+                <h2>Dodaj prihodek</h2>
+                <form id="prihodekForm">
+                    <input type="hidden" id="tipPrihodek" value="prihodek">
+                    <div class="form-group">
+                        <select id="kategorijaPrihodek"></select>
+                        <div id="kategorijaPrihodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group" id="novaKategorijaPrihodekGroup" style="display: none;">
+                        <input type="text" id="novaKategorijaPrihodek" placeholder="Nova kategorija">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="znesekPrihodek" placeholder="Znesek">
+                        <div id="znesekPrihodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" id="datumPrihodek">
+                        <div id="datumPrihodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="opisPrihodek" rows="3" placeholder="Opis (opcijsko)"></textarea>
+                    </div>
+                    <button type="submit" class="neon-btn" id="dodajPrihodekButton"><span>Dodaj prihodek</span></button>
+                </form>
+                <div id="serverMessagePrihodek" style="margin-top:1rem; min-height:1.2em;"></div>
             </div>
-            <div class="form-group" id="novaKategorijaPrihodekGroup" style="display: none;">
-                <input type="text" id="novaKategorijaPrihodek" placeholder="Nova kategorija">
+
+            <!-- Dodaj odhodek -->
+            <div class="transaction-container" id="odhodekContainer">
+                <h2>Dodaj odhodek</h2>
+                <form id="odhodekForm">
+                    <input type="hidden" id="tipOdhodek" value="odhodek">
+                    <div class="form-group">
+                        <select id="kategorijaOdhodek"></select>
+                        <div id="kategorijaOdhodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group" id="novaKategorijaOdhodekGroup" style="display: none;">
+                        <input type="text" id="novaKategorijaOdhodek" placeholder="Nova kategorija">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="znesekOdhodek" placeholder="Znesek">
+                        <div id="znesekOdhodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" id="datumOdhodek">
+                        <div id="datumOdhodekError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="opisOdhodek" rows="3" placeholder="Opis (opcijsko)"></textarea>
+                    </div>
+                    <button type="submit" class="neon-btn" id="dodajOdhodekButton"><span>Dodaj odhodek</span></button>
+                </form>
+                <div id="serverMessageOdhodek" style="margin-top:1rem; min-height:1.2em;"></div>
             </div>
-            <div class="form-group">
-                <input type="text" id="znesekPrihodek" placeholder="Znesek">
-                <div id="znesekPrihodekError" class="error-message"></div>
+        </div>
+
+        <!-- Seznami transakcij -->
+        <div class="container-lists">
+            <div class="list-container">
+                <h2>Moji prihodki</h2>
+                <div id="prihodkiList"></div>
             </div>
-            <div class="form-group">
-                <input type="date" id="datumPrihodek">
-                <div id="datumPrihodekError" class="error-message"></div>
+            <div class="list-container">
+                <h2>Moji odhodki</h2>
+                <div id="odhodekList"></div>
             </div>
-            <div class="form-group">
-                <textarea id="opisPrihodek" rows="3" placeholder="Opis (opcijsko)"></textarea>
-            </div>
-            <button type="submit" class="neon-btn" id="dodajPrihodekButton">
-                <span>Dodaj prihodek</span>
-            </button>
-        </form>
-        <div id="serverMessagePrihodek" style="margin-top:1rem; min-height:1.2em;"></div>
+        </div>
     </div>
 
-    <!-- DODAJ ODHODEK -->
-    <div class="transaction-container" id="odhodekContainer">
-        <h2>Dodaj odhodek</h2>
-        <form id="odhodekForm">
-            <input type="hidden" id="tipOdhodek" value="odhodek">
-            <div class="form-group">
-                <select id="kategorijaOdhodek"></select>
-                <div id="kategorijaOdhodekError" class="error-message"></div>
+    <!-- DESNI DEL: Moj Račun -->
+    <div class="right-column">
+        <div class="account-container">
+            <h2>Moj Račun</h2>
+            <p>Status: <span id="accountBalance">0.00 €</span></p>
+            <h3>Vse transakcije</h3>
+            <div id="allTransactionsList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal za urejanje transakcije -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Popravi Transakcijo</h2>
+        <form id="editForm">
+            <label for="editKategorija">Kategorija:</label>
+            <select id="editKategorija" name="kategorija" required></select>
+            <div id="editKategorijaError" class="error-message"></div>
+            <!-- Textbox za novo kategorijo se v modalnem urejanju ne uporablja -->
+            <div class="form-group" id="novaKategorijaEditGroup" style="display: none;">
+                <input type="text" id="novaKategorijaEdit" placeholder="Nova kategorija">
             </div>
-            <div class="form-group" id="novaKategorijaOdhodekGroup" style="display: none;">
-                <input type="text" id="novaKategorijaOdhodek" placeholder="Nova kategorija">
+            <label for="editZnesek">Znesek:</label>
+            <input type="text" id="editZnesek" name="znesek" required>
+            <label for="editDatum">Datum:</label>
+            <input type="date" id="editDatum" name="datum" required>
+            <label for="editOpis">Opis:</label>
+            <textarea id="editOpis" name="opis"></textarea>
+            <div class="modal-buttons">
+                <button type="button" id="btnUpdate"><span>Popravi</span></button>
+                <button type="button" id="btnCancel"><span>Zavrzi</span></button>
             </div>
-            <div class="form-group">
-                <input type="text" id="znesekOdhodek" placeholder="Znesek">
-                <div id="znesekOdhodekError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <input type="date" id="datumOdhodek">
-                <div id="datumOdhodekError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <textarea id="opisOdhodek" rows="3" placeholder="Opis (opcijsko)"></textarea>
-            </div>
-            <button type="submit" class="neon-btn" id="dodajOdhodekButton">
-                <span>Dodaj odhodek</span>
-            </button>
         </form>
-        <div id="serverMessageOdhodek" style="margin-top:1rem; min-height:1.2em;"></div>
     </div>
 </div>
 
 <script>
-    // Ob nalaganju strani naložimo kategorije (dinamično)
-    document.addEventListener("DOMContentLoaded", loadCategories);
+    // Ob nalaganju strani
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCategories();
+        naloziTransakcije();
+    });
+
+    // Funkcija za nalaganje kategorij za obrazce (levi del)
     async function loadCategories() {
         try {
             const response = await fetch("dobiKategorije");
             const data = await response.json();
             const prihodekSelect = document.getElementById("kategorijaPrihodek");
             const odhodekSelect = document.getElementById("kategorijaOdhodek");
-
-            // Počistimo
             prihodekSelect.innerHTML = "";
             odhodekSelect.innerHTML = "";
 
-            // Privzeti možnosti
-            let defaultOption1 = document.createElement("option");
-            defaultOption1.value = "";
-            defaultOption1.text = "Izberi kategorijo";
-            prihodekSelect.appendChild(defaultOption1);
+            let defPrihodek = document.createElement("option");
+            defPrihodek.value = "";
+            defPrihodek.text = "Izberi kategorijo";
+            prihodekSelect.appendChild(defPrihodek);
 
-            let defaultOption2 = document.createElement("option");
-            defaultOption2.value = "";
-            defaultOption2.text = "Izberi kategorijo";
-            odhodekSelect.appendChild(defaultOption2);
+            let defOdhodek = document.createElement("option");
+            defOdhodek.value = "";
+            defOdhodek.text = "Izberi kategorijo";
+            odhodekSelect.appendChild(defOdhodek);
 
-            // Vstavimo kategorije
             data.forEach(cat => {
                 let option = document.createElement("option");
                 option.value = cat.ime;
@@ -258,23 +547,193 @@
                 }
             });
 
-            // Dodajmo 'Dodaj novo kategorijo'
-            let addNewOption1 = document.createElement("option");
-            addNewOption1.value = "addNew";
-            addNewOption1.text = "Dodaj novo kategorijo";
-            prihodekSelect.appendChild(addNewOption1);
+            // Možnost "Dodaj novo kategorijo" samo v obrazcih za dodajanje
+            let addNewPrih = document.createElement("option");
+            addNewPrih.value = "addNew";
+            addNewPrih.text = "Dodaj novo kategorijo";
+            prihodekSelect.appendChild(addNewPrih);
 
-            let addNewOption2 = document.createElement("option");
-            addNewOption2.value = "addNew";
-            addNewOption2.text = "Dodaj novo kategorijo";
-            odhodekSelect.appendChild(addNewOption2);
-
+            let addNewOdh = document.createElement("option");
+            addNewOdh.value = "addNew";
+            addNewOdh.text = "Dodaj novo kategorijo";
+            odhodekSelect.appendChild(addNewOdh);
         } catch (error) {
             console.error("Napaka pri nalaganju kategorij:", error);
         }
     }
 
-    // Neon efekt na gumbih
+    // Funkcija za nalaganje in izris transakcij (levi in desni del)
+    async function naloziTransakcije() {
+        try {
+            const response = await fetch("dobiTransakcije");
+            const data = await response.json();
+
+            // Leva stran: Moji prihodki in odhodki
+            const prihodkiList = document.getElementById("prihodkiList");
+            const odhodekList = document.getElementById("odhodekList");
+            prihodkiList.innerHTML = "";
+            odhodekList.innerHTML = "";
+
+            data.forEach(t => {
+                let itemDiv = document.createElement("div");
+                itemDiv.className = "list-item";
+                let cenaClass = (t.tip === "prihodek") ? "list-item-price-prihodek" : "list-item-price-odhodek";
+                itemDiv.innerHTML = `
+          <div class="list-item-info">
+            <span class="list-item-name">${t.kategorija}</span>
+            <span class="${cenaClass}">Cena: ${t.znesek} €</span>
+            <span class="list-item-desc">Opis: ${t.opis || ""}</span>
+            <span class="list-item-desc">Datum: ${t.datum}</span>
+          </div>
+          <div class="list-item-actions">
+            <button class="neon-btn list-edit-btn" data-id="${t.id}"><span>Uredi</span></button>
+            <button class="neon-btn list-delete-btn" data-id="${t.id}"><span>Izbrisi</span></button>
+          </div>
+        `;
+
+                // Brisanje
+                let deleteBtn = itemDiv.querySelector(".list-delete-btn");
+                deleteBtn.addEventListener("click", async function() {
+                    const transactionId = this.getAttribute("data-id");
+                    try {
+                        const resp = await fetch("izbrisiTransakcijo", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            body: new URLSearchParams({ id: transactionId })
+                        });
+                        const text = await resp.text();
+                        if (text.startsWith("✅")) {
+                            naloziTransakcije();
+                        } else {
+                            alert(text);
+                        }
+                    } catch (error) {
+                        alert("⛔ Napaka pri povezavi s strežnikom.");
+                    }
+                });
+
+                // Urejanje
+                let editBtn = itemDiv.querySelector(".list-edit-btn");
+                editBtn.addEventListener("click", function() {
+                    document.getElementById("editModal").style.display = "block";
+                    let modalTitle = document.getElementById("modalTitle");
+                    modalTitle.textContent = (t.tip === "prihodek") ? "Popravi Prihodek" : "Popravi Odhodek";
+                    loadCategoriesForEdit(t.tip, t.kategorija);
+                    document.getElementById("editZnesek").value = t.znesek;
+                    document.getElementById("editDatum").value = t.datum;
+                    document.getElementById("editOpis").value = t.opis;
+                    let editForm = document.getElementById("editForm");
+                    editForm.setAttribute("data-id", t.id);
+                    editForm.setAttribute("data-tip", t.tip);
+                });
+
+                if (t.tip === "prihodek") {
+                    prihodkiList.appendChild(itemDiv);
+                } else {
+                    odhodekList.appendChild(itemDiv);
+                }
+            });
+
+            // Desna stran: Izračun stanja in izpis vseh transakcij
+            const balance = calculateBalance(data);
+            document.getElementById("accountBalance").innerText = balance + " €";
+
+            const accountContainer = document.querySelector(".account-container");
+            if (parseFloat(balance) >= 0) {
+                // Pozitivno stanje – zelena obroba in animacija
+                accountContainer.style.animation = "fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out";
+                accountContainer.style.borderColor = "#00ff00";
+                document.getElementById("accountBalance").style.color = "#00ff00";
+            } else {
+                // Negativno stanje – rdeča obroba in animacija
+                accountContainer.style.animation = "fadeIn 0.6s forwards, glowPulseRed 2s infinite alternate ease-in-out";
+                accountContainer.style.borderColor = "#ff0000";
+                document.getElementById("accountBalance").style.color = "#ff0000";
+            }
+
+
+
+            // ... ostala logika naloziTransakcije ostane enaka ...
+// Samo del, kjer v "Moj Račun" izpisuješ vse transakcije, dobi barvanje:
+
+            const allTransactionsList = document.getElementById("allTransactionsList");
+            allTransactionsList.innerHTML = "";
+            data.forEach(t => {
+                let row = document.createElement("div");
+                row.className = "list-item";
+
+                // Določimo barvo tipa glede na "prihodek" ali "odhodek"
+                let tipColor = (t.tip === "prihodek") ? "green" : "red";
+
+                row.innerHTML = `
+    <div style="flex-direction: column;">
+      <!-- Tu besedo PRIHODEK/ODHODEK izpišemo z barvo tipColor -->
+      <strong style="color: ${tipColor};">${t.tip.toUpperCase()}</strong> - ${t.kategorija}<br>
+      Znesek: ${t.znesek} € | Datum: ${t.datum}<br>
+      <small>${t.opis || ""}</small>
+    </div>
+  `;
+                allTransactionsList.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error("Napaka pri nalaganju transakcij:", error);
+        }
+    }
+
+    // Funkcija za izračun stanja
+    function calculateBalance(transactions) {
+        let balance = 0;
+        transactions.forEach(t => {
+            let amount = parseFloat(t.znesek);
+            if (t.tip === "prihodek") {
+                balance += amount;
+            } else if (t.tip === "odhodek") {
+                balance -= amount;
+            }
+        });
+        return balance.toFixed(2);
+    }
+
+    // Nalaganje kategorij v modal (brez možnosti "Dodaj novo kategorijo")
+    async function loadCategoriesForEdit(tip, selectedCategory) {
+        try {
+            const response = await fetch("dobiKategorije");
+            const data = await response.json();
+            const editSelect = document.getElementById("editKategorija");
+            editSelect.innerHTML = "";
+
+            let defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.text = "Izberi kategorijo";
+            editSelect.appendChild(defaultOption);
+
+            let categoryFound = false;
+            data.forEach(cat => {
+                if (cat.tip === tip) {
+                    let option = document.createElement("option");
+                    option.value = cat.ime;
+                    option.text = cat.ime;
+                    editSelect.appendChild(option);
+                    if (cat.ime === selectedCategory) {
+                        categoryFound = true;
+                    }
+                }
+            });
+            if (categoryFound) {
+                editSelect.value = selectedCategory;
+            } else {
+                editSelect.value = "";
+            }
+            // Skrij textbox za novo kategorijo
+            document.getElementById("novaKategorijaEditGroup").style.display = "none";
+            document.getElementById("novaKategorijaEdit").value = "";
+        } catch (error) {
+            console.error("Napaka pri nalaganju kategorij za urejanje:", error);
+        }
+    }
+
+    // Neon efekti za gumbe
     function addNeonFollow(btn) {
         btn.addEventListener("mousemove", (e) => {
             const rect = btn.getBoundingClientRect();
@@ -291,7 +750,7 @@
     addNeonFollow(document.getElementById("dodajPrihodekButton"));
     addNeonFollow(document.getElementById("dodajOdhodekButton"));
 
-    // Ko izbere "Dodaj novo kategorijo", prikažemo/skrijemo textbox
+    // Pokaži/skrij polje za novo kategorijo (obrazci za dodajanje)
     function toggleNovaKategorija(selectElem, novaGroupId) {
         const novaGroup = document.getElementById(novaGroupId);
         if (selectElem.value === "addNew") {
@@ -307,23 +766,18 @@
         toggleNovaKategorija(this, "novaKategorijaOdhodekGroup");
     });
 
-    // --- PRIHODEK ---
-    const kategorijaPrihodek         = document.getElementById("kategorijaPrihodek");
-    const kategorijaPrihodekError    = document.getElementById("kategorijaPrihodekError");
-    const novaKategorijaPrihodek     = document.getElementById("novaKategorijaPrihodek");
+    // Validacija in dodajanje PRIHODEK
+    const kategorijaPrihodek = document.getElementById("kategorijaPrihodek");
+    const kategorijaPrihodekError = document.getElementById("kategorijaPrihodekError");
+    const novaKategorijaPrihodek = document.getElementById("novaKategorijaPrihodek");
+    const znesekPrihodek = document.getElementById("znesekPrihodek");
+    const znesekPrihodekError = document.getElementById("znesekPrihodekError");
+    const datumPrihodek = document.getElementById("datumPrihodek");
+    const datumPrihodekError = document.getElementById("datumPrihodekError");
+    const opisPrihodek = document.getElementById("opisPrihodek");
+    const serverMessagePrihodek = document.getElementById("serverMessagePrihodek");
 
-    const znesekPrihodek            = document.getElementById("znesekPrihodek");
-    const znesekPrihodekError       = document.getElementById("znesekPrihodekError");
-
-    const datumPrihodek             = document.getElementById("datumPrihodek");
-    const datumPrihodekError        = document.getElementById("datumPrihodekError");
-
-    const opisPrihodek              = document.getElementById("opisPrihodek");
-    const serverMessagePrihodek     = document.getElementById("serverMessagePrihodek");
-
-    // Ko zapusti (blur) polje nove kategorije, preverimo le to polje
     novaKategorijaPrihodek.addEventListener("blur", function() {
-        // Samo če je izbran "Dodaj novo kategorijo"
         if (kategorijaPrihodek.value === "addNew") {
             if (!novaKategorijaPrihodek.value.trim()) {
                 novaKategorijaPrihodek.classList.add("invalid");
@@ -335,9 +789,7 @@
             }
         }
     });
-
     function checkKategorijaPrihodek() {
-        // Če je izbran "Dodaj novo kategorijo", preverimo textbox
         if (kategorijaPrihodek.value === "addNew") {
             if (!novaKategorijaPrihodek.value.trim()) {
                 novaKategorijaPrihodek.classList.add("invalid");
@@ -385,20 +837,16 @@
             datumPrihodekError.style.display = "none";
         }
     }
-
-    // Ko zapustimo znesek ali datum, pokažemo napako (če je)
     znesekPrihodek.addEventListener("blur", checkZnesekPrihodek);
     datumPrihodek.addEventListener("blur", checkDatumPrihodek);
 
     document.getElementById("prihodekForm").addEventListener("submit", async function(e) {
         e.preventDefault();
         serverMessagePrihodek.innerText = "";
-        // Ob oddaji validiramo
         checkKategorijaPrihodek();
         checkZnesekPrihodek();
         checkDatumPrihodek();
 
-        // Prekinemo, če so polja neveljavna
         if (
             kategorijaPrihodek.classList.contains("invalid") ||
             znesekPrihodek.classList.contains("invalid") ||
@@ -410,11 +858,6 @@
         let finalKategorija = "";
         if (kategorijaPrihodek.value === "addNew") {
             finalKategorija = novaKategorijaPrihodek.value.trim();
-            let newOption = document.createElement("option");
-            newOption.value = finalKategorija;
-            newOption.text = finalKategorija;
-            kategorijaPrihodek.appendChild(newOption);
-            kategorijaPrihodek.value = finalKategorija;
         } else {
             finalKategorija = kategorijaPrihodek.options[kategorijaPrihodek.selectedIndex].text;
         }
@@ -453,18 +896,18 @@
                     inputs.forEach(function(input) {
                         input.style.borderColor = "";
                         input.style.boxShadow = "";
+                        input.value = "";
                     });
                     btn.style.setProperty("--neon-color", originalNeon);
                     btn.style.borderColor = "";
                     btn.querySelector("span").style.color = "";
-                    // Reset polj
                     kategorijaPrihodek.value = "";
+                    document.getElementById("novaKategorijaPrihodekGroup").style.display = "none";
                     novaKategorijaPrihodek.value = "";
-                    znesekPrihodek.value = "";
-                    datumPrihodek.value = "";
-                    opisPrihodek.value = "";
                     serverMessagePrihodek.innerText = "";
                 }, 2000);
+
+                naloziTransakcije();
             } else {
                 serverMessagePrihodek.innerText = text;
             }
@@ -473,21 +916,17 @@
         }
     });
 
-    // --- ODHODEK ---
-    const kategorijaOdhodek       = document.getElementById("kategorijaOdhodek");
-    const kategorijaOdhodekError  = document.getElementById("kategorijaOdhodekError");
-    const novaKategorijaOdhodek   = document.getElementById("novaKategorijaOdhodek");
+    // Validacija in dodajanje ODHODEK
+    const kategorijaOdhodek = document.getElementById("kategorijaOdhodek");
+    const kategorijaOdhodekError = document.getElementById("kategorijaOdhodekError");
+    const novaKategorijaOdhodek = document.getElementById("novaKategorijaOdhodek");
+    const znesekOdhodek = document.getElementById("znesekOdhodek");
+    const znesekOdhodekError = document.getElementById("znesekOdhodekError");
+    const datumOdhodek = document.getElementById("datumOdhodek");
+    const datumOdhodekError = document.getElementById("datumOdhodekError");
+    const opisOdhodek = document.getElementById("opisOdhodek");
+    const serverMessageOdhodek = document.getElementById("serverMessageOdhodek");
 
-    const znesekOdhodek           = document.getElementById("znesekOdhodek");
-    const znesekOdhodekError      = document.getElementById("znesekOdhodekError");
-
-    const datumOdhodek            = document.getElementById("datumOdhodek");
-    const datumOdhodekError       = document.getElementById("datumOdhodekError");
-
-    const opisOdhodek             = document.getElementById("opisOdhodek");
-    const serverMessageOdhodek    = document.getElementById("serverMessageOdhodek");
-
-    // Ob zapuščanju polja 'nova kategorija' za odhodek
     novaKategorijaOdhodek.addEventListener("blur", function() {
         if (kategorijaOdhodek.value === "addNew") {
             if (!novaKategorijaOdhodek.value.trim()) {
@@ -500,7 +939,6 @@
             }
         }
     });
-
     function checkKategorijaOdhodek() {
         if (kategorijaOdhodek.value === "addNew") {
             if (!novaKategorijaOdhodek.value.trim()) {
@@ -566,17 +1004,14 @@
         ) {
             return;
         }
+
         let finalKategorija = "";
         if (kategorijaOdhodek.value === "addNew") {
             finalKategorija = novaKategorijaOdhodek.value.trim();
-            let newOption = document.createElement("option");
-            newOption.value = finalKategorija;
-            newOption.text = finalKategorija;
-            kategorijaOdhodek.appendChild(newOption);
-            kategorijaOdhodek.value = finalKategorija;
         } else {
             finalKategorija = kategorijaOdhodek.options[kategorijaOdhodek.selectedIndex].text;
         }
+
         const tip = document.getElementById("tipOdhodek").value;
         const podatki = {
             kategorija: finalKategorija,
@@ -610,24 +1045,66 @@
                     inputs.forEach(function(input) {
                         input.style.borderColor = "";
                         input.style.boxShadow = "";
+                        input.value = "";
                     });
                     btn.style.setProperty("--neon-color", originalNeon);
                     btn.style.borderColor = "";
                     btn.querySelector("span").style.color = "";
-                    // Reset polj
                     kategorijaOdhodek.value = "";
                     document.getElementById("novaKategorijaOdhodekGroup").style.display = "none";
                     novaKategorijaOdhodek.value = "";
-                    znesekOdhodek.value = "";
-                    datumOdhodek.value = "";
-                    opisOdhodek.value = "";
                     serverMessageOdhodek.innerText = "";
                 }, 2000);
+                naloziTransakcije();
             } else {
                 serverMessageOdhodek.innerText = text;
             }
         } catch (error) {
             serverMessageOdhodek.innerText = "⛔ Napaka pri povezavi s strežnikom.";
+        }
+    });
+
+    // Modal – Zapiranje modala
+    document.getElementById("btnCancel").addEventListener("click", function() {
+        document.getElementById("editModal").style.display = "none";
+    });
+
+    // Modal – Posodobitev transakcije
+    document.getElementById("btnUpdate").addEventListener("click", async function() {
+        let form = document.getElementById("editForm");
+        let transactionId = form.getAttribute("data-id");
+        let tip = form.getAttribute("data-tip");
+
+        let editSelect = document.getElementById("editKategorija");
+        let finalCategory = editSelect.value;
+        let znesek = document.getElementById("editZnesek").value;
+        let datum = document.getElementById("editDatum").value;
+        let opis = document.getElementById("editOpis").value;
+
+        let params = new URLSearchParams({
+            id: transactionId,
+            kategorija: finalCategory,
+            znesek: znesek,
+            datum: datum,
+            opis: opis,
+            tip: tip
+        });
+
+        try {
+            const response = await fetch("urediTransakcijo", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params
+            });
+            const text = await response.text();
+            if (text.startsWith("✅")) {
+                document.getElementById("editModal").style.display = "none";
+                naloziTransakcije();
+            } else {
+                alert(text);
+            }
+        } catch (error) {
+            alert("⛔ Napaka pri povezavi s strežnikom.");
         }
     });
 </script>

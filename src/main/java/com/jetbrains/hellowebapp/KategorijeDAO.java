@@ -40,6 +40,20 @@ public class KategorijeDAO {
         }
         return -1;
     }
+    public static int getKategorijaIdByName(String imeKategorije) {
+        String sql = "SELECT id FROM kategorije WHERE ime = ?";
+        try (Connection conn = PovezavaZBazo.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, imeKategorije);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // vrnemo -1, če kategorije ne najdemo
+    }
 
     // Vrne seznam kategorij za določenega uporabnika
     public static List<Kategorija> dobiKategorijeZaUporabnika(int uporabnikId) {

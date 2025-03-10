@@ -15,6 +15,7 @@
             font-family: Arial, sans-serif;
             color: #fff;
         }
+
         .register-container {
             background-color: #111;
             border-radius: 10px;
@@ -26,40 +27,51 @@
             transform: translateY(-10px);
             animation: fadeIn 0.6s forwards, glowPulsePurple 2s infinite alternate ease-in-out;
         }
+
         .register-container.error {
             animation: fadeIn 0.6s forwards, glowPulseRed 2s infinite alternate ease-in-out !important;
         }
+
         .register-container.success {
             animation: fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out !important;
         }
+
         @keyframes fadeIn {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
         @keyframes glowPulsePurple {
             0% { box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3; }
             100% { box-shadow: 0 0 20px #5D3FD3, 0 0 40px #5D3FD3; }
         }
+
         @keyframes glowPulseRed {
             0% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
             100% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
         }
+
         @keyframes glowPulseGreen {
             0% { box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
             100% { box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
         }
+
         .register-container h2 {
             margin-bottom: 1.5rem;
             text-shadow: 0 0 3px #5D3FD3;
         }
+
         .register-container form {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .register-container input, select#drzavaField {
+
+        /* ----- Ključna sprememba: združili smo input in select v eno deklaracijo ----- */
+        .register-container input,
+        .register-container select {
             width: 80%;
             max-width: 280px;
             padding: 0.75rem;
@@ -72,17 +84,49 @@
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        .register-container input:hover, select#drzavaField:hover {
+
+        .register-container input:hover,
+        .register-container select:hover {
             border-color: #5D3FD3;
         }
-        .register-container input:focus, select#drzavaField:focus {
+
+        .register-container input:focus,
+        .register-container select:focus {
             border-color: #5D3FD3;
             box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
         }
+        .register-container input,
+        .register-container select#drzavaField {
+            box-sizing: border-box; /* poskrbi, da padding in border ne vplivata na širino */
+            width: 100% !important; /* polna širina za poravnavo z ostalimi elementi */
+            max-width: 280px;
+        }
+
+        .register-container select#drzavaField {
+            -webkit-appearance: none; /* lepši videz selecta */
+            appearance: none;
+            background-color: #222;
+            color: #fff;
+            padding-right: 1.5rem; /* dodaten prostor za puščico */
+            background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' fill='%23ffffff' viewBox='0 0 20 20'><polygon points='0,0 20,0 10,10'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 12px;
+        }
+
+        .register-container select#drzavaField:focus,
+        .register-container select#drzavaField:hover {
+            border-color: #5D3FD3;
+            box-shadow: 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
+        }
+
+        /* --------------------------------------------------------------------------- */
+
         .invalid {
             border-color: #ff0000 !important;
             box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000 !important;
         }
+
         .error-message {
             color: #ff0000;
             font-size: 0.9rem;
@@ -95,10 +139,12 @@
             align-self: flex-start;
             margin-left: 10%;
         }
+
         @keyframes slideInLeft {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
+
         .neon-btn {
             position: relative;
             background: #111;
@@ -116,6 +162,7 @@
             z-index: 1;
             transition: border-color 0.15s ease, color 0.15s ease;
         }
+
         .neon-btn::before {
             content: "";
             position: absolute;
@@ -129,6 +176,7 @@
             z-index: 0;
             mix-blend-mode: screen;
         }
+
         .neon-btn::after {
             content: "";
             position: absolute;
@@ -140,26 +188,31 @@
             border-radius: 4px;
             z-index: 1;
         }
+
         .neon-btn span {
             position: relative;
             z-index: 2;
             transition: text-shadow 0.15s ease, color 0.15s ease;
             color: #000001;
         }
+
         .neon-btn:hover span {
             color: #5D3FD3;
             text-shadow: 0 0 5px #5D3FD3, 0 0 10px #5D3FD3, 0 0 20px #5D3FD3;
         }
+
         .valid {
             border-color: #00ff00 !important;
             box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
         }
+
         .input-group {
             position: relative;
             width: 80%;
             max-width: 280px;
             margin: 0.5rem 0;
         }
+
         .input-group input {
             width: 100%;
             padding: 0.75rem;
@@ -171,6 +224,7 @@
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
         .toggle-password-btn {
             position: absolute;
             top: 50%;
@@ -183,10 +237,12 @@
             font-size: 0.9rem;
             outline: none;
         }
+
         .toggle-password-btn:hover {
             color: #fff;
         }
     </style>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -201,7 +257,7 @@
 
         <!-- Dropdown meni za izbiro države/kraja -->
         <select id="drzavaField" name="drzava">
-            <option value="">Izberi državo</option>
+            <option value="">Izberi Kraj</option>
         </select>
         <div id="drzavaError" class="error-message"></div>
 
@@ -256,25 +312,28 @@
     // Naloži države v dropdown meni prek AJAX klica na endpoint /dobiKraje
     $(document).ready(function(){
         $.ajax({
-            url: '/dobiKrajeServlet',
+            url: '/Banka3_war_exploded/dobiKraje', // TO je pravilna pot
             type: 'GET',
+            dataType: 'json',
             success: function(data){
+                console.log("Prejeti podatki:", data);
                 $.each(data, function(i, item) {
-                    // Prikaz: ime (postna_st)
-                    const displayText = item.ime + " (" + item.postna_st + ")";
                     $('#drzavaField').append(
                         $('<option>', {
                             value: item.id,
-                            text: displayText
+                            text: item.ime + " (" + item.postna_st + ")"
                         })
                     );
                 });
             },
             error: function(err){
-                console.error("Napaka pri nalaganju držav/krajev:", err);
+                console.error("Napaka pri nalaganju krajev:", err);
             }
         });
     });
+
+
+
 
     // Preusmeritev na prijavo
     prijavaBtn.addEventListener("click", () => {
@@ -424,6 +483,9 @@
             serverMsg.innerText = "⛔ Napaka pri povezavi s strežnikom.";
         }
     });
+
+
+
 </script>
 </body>
 </html>

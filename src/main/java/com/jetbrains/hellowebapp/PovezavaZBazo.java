@@ -1,20 +1,23 @@
 package com.jetbrains.hellowebapp;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class PovezavaZBazo {
-    private static final String URL = "jdbc:postgresql://ep-tiny-math-a8scmk0c-pooler.eastus2.azure.neon.tech/neondb";
-    private static final String USER = "neondb_owner";
-    private static final String PASS = "npg_NVafpKP87qFW";
+    // Naloži .env datoteko, ki je na classpathu (v src/main/resources)
+    private static final Dotenv dotenv = Dotenv.load();
+    private static final String URL = dotenv.get("DB_URL");
+    private static final String USER = dotenv.get("DB_USER");
+    private static final String PASS = dotenv.get("DB_PASS");
     private static final String DRIVER_NAME = "org.postgresql.Driver";
 
     public static Connection connect() {
         try {
             // Naloži gonilnik
             Class.forName(DRIVER_NAME);
-            // Ustvari povezavo z uporabo URL, USER in PASS
+            // Ustvari povezavo z uporabo podatkov iz .env
             Connection con = DriverManager.getConnection(URL, USER, PASS);
             System.out.println("Povezava z bazo je uspešna!");
             return con;

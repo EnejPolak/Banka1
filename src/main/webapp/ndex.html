@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Tvoj Račun - Transakcije</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
     <style>
         :root {
             --neon-color: #5D3FD3;
@@ -394,6 +396,223 @@
             0% { box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
             100% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
         }
+
+        /* -- External Social Link CSS Styles -- */
+
+        .containerGumb {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .label {
+            background-color: transparent;
+            border: 2px solid rgb(91, 91, 240);
+            display: flex;
+            align-items: center;
+            border-radius: 50px;
+            width: 160px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            padding: 5px;
+            position: relative;
+        }
+
+        .label::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            width: 8px;
+            height: 8px;
+            transition: all 0.4s ease;
+            border-radius: 100%;
+            margin: auto;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .label .input {
+            display: none;
+        }
+
+        .label .title {
+            font-size: 17px;
+            color: #fff;
+            transition: all 0.4s ease;
+            position: absolute;
+            right: 18px;
+            text-align: center;
+        }
+
+        .label .title:last-child {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .label .circle {
+            height: 45px;
+            width: 45px;
+            border-radius: 50%;
+            background-color: rgb(91, 91, 240);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.4s ease;
+            position: relative;
+            box-shadow: 0 0 0 0 rgb(255, 255, 255);
+            overflow: hidden;
+        }
+
+        .label .circle .icon {
+            color: #fff;
+            width: 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+        }
+
+        .label .circle .square {
+            aspect-ratio: 1;
+            width: 15px;
+            border-radius: 2px;
+            background-color: #fff;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+        }
+
+        .label .circle::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: #3333a8;
+            width: 100%;
+            height: 0;
+            transition: all 0.4s ease;
+        }
+
+        .label:has(.input:checked) {
+            width: 57px;
+            animation: installed 0.4s ease 3.5s forwards;
+        }
+
+        .label:has(.input:checked)::before {
+            animation: rotate 3s ease-in-out 0.4s forwards;
+        }
+
+        .label .input:checked+.circle {
+            animation:
+                    pulse 1s forwards,
+                    circleDelete 0.2s ease 3.5s forwards;
+            rotate: 180deg;
+        }
+
+        .label .input:checked+.circle::before {
+            animation: installing 3s ease-in-out forwards;
+        }
+
+        .label .input:checked+.circle .icon {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .label .input:checked~.circle .square {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .label .input:checked~.title {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .label .input:checked~.title:last-child {
+            animation: showInstalledMessage 0.4s ease 3.5s forwards;
+        }
+
+
+        @keyframes pulse {
+            0% {
+                scale: 0.95;
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+
+            70% {
+                scale: 1;
+                box-shadow: 0 0 0 16px rgba(255, 255, 255, 0);
+            }
+
+            100% {
+                scale: 0.95;
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        @keyframes installing {
+            from {
+                height: 0;
+            }
+
+            to {
+                height: 100%;
+            }
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(-90deg) translate(27px) rotate(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            99% {
+                transform: rotate(270deg) translate(27px) rotate(270deg);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes installed {
+            100% {
+                width: 150px;
+                border-color: rgb(35, 174, 35);
+            }
+        }
+
+        @keyframes circleDelete {
+            100% {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes showInstalledMessage {
+            100% {
+                opacity: 1;
+                visibility: visible;
+                right: 56px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -488,6 +707,20 @@
             <h3>Vse transakcije</h3>
             <div id="allTransactionsList"></div>
         </div>
+    </div>
+    <div class="containerGumb">
+        <label class="label">
+            <input type="checkbox" class="input" />
+            <span class="circle"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                      viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M12 19V5m0 14-4-4m4 4 4-4"></path>
+                </svg>
+                <div class="square"></div>
+            </span>
+            <p class="title">Download</p>
+            <p class="title">Open</p>
+        </label>
     </div>
 </div>
 
@@ -744,6 +977,9 @@
                 btn.style.setProperty("--neon-color", "#00ff00");
                 btn.style.borderColor = "#00ff00";
                 btn.querySelector("span").style.color = "#00ff00";
+
+                naloziTransakcije();
+
                 setTimeout(() => {
                     container.classList.remove("success");
                     inputs.forEach(function(input) {
@@ -915,13 +1151,24 @@
             const response = await fetch("dobiTransakcije");
             const data = await response.json();
 
-            // Leva stran: Moji prihodki in odhodki
+            // Izračun datuma pred 30 dnevi in današnji datum
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            // Filtriraj transakcije, ki so nastale v zadnjih 30 dneh
+            const filteredData = data.filter(t => {
+                const transDate = new Date(t.datum); // predpostavimo, da je t.datum v formatu, ki ga new Date() pravilno interpretira
+                return transDate >= thirtyDaysAgo && transDate <= today;
+            });
+
+            // Leva stran: Moji prihodki in odhodki (prikaži samo filtrirane transakcije)
             const prihodkiList = document.getElementById("prihodkiList");
             const odhodekList = document.getElementById("odhodekList");
             prihodkiList.innerHTML = "";
             odhodekList.innerHTML = "";
 
-            data.forEach(t => {
+            filteredData.forEach(t => {
                 let itemDiv = document.createElement("div");
                 itemDiv.className = "list-item";
                 let cenaClass = (t.tip === "prihodek") ? "list-item-price-prihodek" : "list-item-price-odhodek";
@@ -937,8 +1184,7 @@
             <button class="neon-btn list-delete-btn" data-id="${t.id}"><span>Izbrisi</span></button>
           </div>
         `;
-
-                // Brisanje
+                // Dodajanje brisanja in urejanja kot prej...
                 let deleteBtn = itemDiv.querySelector(".list-delete-btn");
                 deleteBtn.addEventListener("click", async function() {
                     const transactionId = this.getAttribute("data-id");
@@ -959,7 +1205,6 @@
                     }
                 });
 
-                // Urejanje
                 let editBtn = itemDiv.querySelector(".list-edit-btn");
                 editBtn.addEventListener("click", function() {
                     document.getElementById("editModal").style.display = "block";
@@ -981,10 +1226,11 @@
                 }
             });
 
-            // Desna stran: Izračun stanja in izpis vseh transakcij
-            const balance = calculateBalance(data);
+            // Izračun stanja "Moj Račun" samo iz filtriranih transakcij
+            const balance = calculateBalance(filteredData);
             document.getElementById("accountBalance").innerText = balance + " €";
 
+            // Prilagodi barvo glede na stanje
             const accountContainer = document.querySelector(".account-container");
             if (parseFloat(balance) >= 0) {
                 accountContainer.style.animation = "fadeIn 0.6s forwards, glowPulseGreen 2s infinite alternate ease-in-out";
@@ -996,10 +1242,10 @@
                 document.getElementById("accountBalance").style.color = "#ff0000";
             }
 
-            // Izpis vseh transakcij za "Moj Račun"
+            // Prikaži vse transakcije (lahko tudi tukaj uporabiš filteredData)
             const allTransactionsList = document.getElementById("allTransactionsList");
             allTransactionsList.innerHTML = "";
-            data.forEach(t => {
+            filteredData.forEach(t => {
                 let row = document.createElement("div");
                 row.className = "list-item";
                 let tipColor = (t.tip === "prihodek") ? "green" : "red";
@@ -1012,11 +1258,24 @@
   `;
                 allTransactionsList.appendChild(row);
             });
-
         } catch (error) {
             console.error("Napaka pri nalaganju transakcij:", error);
         }
     }
+
+    function calculateBalance(transactions) {
+        let balance = 0;
+        transactions.forEach(t => {
+            let amount = parseFloat(t.znesek);
+            if (t.tip === "prihodek") {
+                balance += amount;
+            } else if (t.tip === "odhodek") {
+                balance -= amount;
+            }
+        });
+        return balance.toFixed(2);
+    }
+
 
     // Funkcija za izračun stanja
     function calculateBalance(transactions) {
@@ -1116,6 +1375,53 @@
 
     document.getElementById("logoutButton").addEventListener("click", function() {
         window.location.href = "logout";
+    });
+
+    let clickCount = 0;
+    let pdfBlobUrl = null;
+
+    const neonBtn = document.querySelector('.containerGumb .label');
+    // Predpostavimo, da imaš že funkcijo za tvoj poseben neon efekt, npr. triggerNeonAnimation()
+    // če je le klik dogodek, se ta funkcija lahko kliče samodejno preko CSS, zato v handlerju ne blokiraj dogodka.
+
+    neonBtn.addEventListener('click', async function(e) {
+        clickCount++;
+
+        if (clickCount === 1) {
+            try {
+                const response = await fetch("izpisiPdf");
+                if (!response.ok) {
+                    throw new Error("Napaka pri generiranju PDF-ja.");
+                }
+                const blob = await response.blob();
+                pdfBlobUrl = URL.createObjectURL(blob);
+                // Shranimo tudi ime datoteke, če je posredovano v headerju
+                const disposition = response.headers.get("Content-Disposition");
+                if (disposition) {
+                    // Iskanje imena med narekovaji
+                    const filenameRegex = /filename="(.+)"/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches && matches[1]) {
+                        pdfBlobUrl.filename = matches[1]; // shranimo v lastnost (neobvezno)
+                    }
+                }
+            } catch (error) {
+                alert("⛔ " + error.message);
+                clickCount = 0; // Resetiramo, če pride do napake
+            }
+        } else if (clickCount === 2) {
+            if (pdfBlobUrl) {
+                const a = document.createElement("a");
+                a.href = pdfBlobUrl;
+                // Preberemo ime iz Content-Disposition headerja, če je nastavljeno
+                const responseFilename = pdfBlobUrl.filename || "izpis.pdf";
+                a.download = responseFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            clickCount = 0;
+        }
     });
 </script>
 

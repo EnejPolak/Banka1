@@ -20,7 +20,6 @@ public class Registracija extends HttpServlet {
         String ime = request.getParameter("ime");
         String email = request.getParameter("email");
         String geslo = request.getParameter("geslo");
-        // Pridobi id države, ki ga uporabnik izbere (npr. iz dropdown menija)
         String drzavaStr = request.getParameter("drzava");
 
         response.setContentType("application/json; charset=UTF-8");
@@ -40,7 +39,7 @@ public class Registracija extends HttpServlet {
             return;
         }
         if (drzavaStr == null || drzavaStr.trim().isEmpty()) {
-            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Izberite državo.\"}");
+            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Izberite kraj.\"}");
             return;
         }
 
@@ -48,17 +47,19 @@ public class Registracija extends HttpServlet {
         try {
             drzavaId = Integer.parseInt(drzavaStr);
         } catch (NumberFormatException e) {
-            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Neveljavna izbira države.\"}");
+            out.println("{\"status\":\"error\", \"field\":\"drzava\", \"message\":\"Neveljavna izbira kraja.\"}");
             return;
         }
 
-        // Klic v bazo (sedaj posredujemo 4 argumente)
+        // Klic v bazo (nova metoda vrne int)
         try {
-            boolean uspeh = UporabnikDAO.registrirajUporabnika(ime, email, geslo, drzavaId);
-            if (uspeh) {
+            int rezultat = UporabnikDAO.registrirajUporabnika(ime, email, geslo, drzavaId);
+            if (rezultat == 0) {
                 out.println("{\"status\":\"success\"}");
-            } else {
+            } else if (rezultat == 1) {
                 out.println("{\"status\":\"error\", \"field\":\"email\", \"message\":\"E-pošta že obstaja!\"}");
+            } else {
+                out.println("{\"status\":\"error\", \"field\":\"server\", \"message\":\"Napaka pri registraciji.\"}");
             }
         } catch (Exception e) {
             out.println("{\"status\":\"error\", \"field\":\"server\", \"message\":\"Napaka pri registraciji: " + e.getMessage() + "\"}");

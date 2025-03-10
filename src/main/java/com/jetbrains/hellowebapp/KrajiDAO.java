@@ -26,3 +26,8 @@ public class KrajiDAO {
         return seznam;
     }
 }
+
+
+
+
+

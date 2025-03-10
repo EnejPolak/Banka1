@@ -9,35 +9,40 @@ public class UporabnikDAO {
 
     /**
      * Registracija uporabnika preko stored procedure sp_registriraj_uporabnika.
-     * Sprejme ime, e-pošto, geslo (v čisti obliki) in id države.
-     *
-     * @param ime      Ime uporabnika.
-     * @param ePosta   E-poštni naslov.
-     * @param geslo    Geslo v čisti obliki.
-     * @param drzavaId Id države, ki ga je izbral uporabnik.
-     * @return true, če je registracija uspešna, sicer false.
+     * Vrne statusno kodo:
+     * 0: Uspešno
+     * 1: Email že obstaja
+     * -1: Druga napaka
      */
-    public static boolean registrirajUporabnika(String ime, String ePosta, String geslo, int drzavaId) {
+    public static int registrirajUporabnika(String ime, String ePosta, String geslo, int drzavaId) {
         String gesloHash = hashirajGeslo(geslo);
-        // Uporabljamo stored procedure, zato ne uporabljamo SQL INSERT neposredno.
         String callSQL = "{ ? = call sp_registriraj_uporabnika(?, ?, ?, ?) }";
+
         try (Connection conn = PovezavaZBazo.connect();
              CallableStatement cstmt = conn.prepareCall(callSQL)) {
 
-            // Prvi parameter je izhodni, tip BOOLEAN.
-            cstmt.registerOutParameter(1, Types.BOOLEAN);
+            // Registriraj izhodni parameter (INTEGER)
+            cstmt.registerOutParameter(1, Types.INTEGER);
+
+            // Nastavi vhodne parametre
             cstmt.setString(2, ime);
             cstmt.setString(3, ePosta);
             cstmt.setString(4, gesloHash);
             cstmt.setInt(5, drzavaId);
 
+            // Izvedi stored procedure
             cstmt.execute();
-            return cstmt.getBoolean(1);
+
+            // Vrni statusno kodo
+            return cstmt.getInt(1);
+
         } catch (SQLException e) {
-            System.out.println("⛔ Napaka pri registraciji: " + e.getMessage());
-            return false;
+            System.out.println("⛔ SQL Napaka pri registraciji: " + e.getMessage());
+            return -1;
         }
     }
+
+
 
     /**
      * Prijava uporabnika preko stored procedure sp_prijava.
@@ -49,13 +54,19 @@ public class UporabnikDAO {
         try (Connection conn = PovezavaZBazo.connect();
              CallableStatement cstmt = conn.prepareCall(callSQL)) {
 
-            // Prvi parameter je izhodni, tip INTEGER.
+            // Registriraj izhodni parameter (INTEGER - uporabnikId)
             cstmt.registerOutParameter(1, Types.INTEGER);
+
+            // Nastavi vhodne parametre
             cstmt.setString(2, email);
             cstmt.setString(3, gesloHash);
 
+            // Izvedi stored procedure
             cstmt.execute();
+
+            // Vrni uporabnikId ali -1, če prijava ni uspela
             return cstmt.getInt(1);
+
         } catch (SQLException e) {
             System.out.println("⛔ Napaka pri prijavi: " + e.getMessage());
             return -1;

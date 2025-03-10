@@ -1379,10 +1379,9 @@
 
     let clickCount = 0;
     let pdfBlobUrl = null;
+    let pdfFilename = null;
 
     const neonBtn = document.querySelector('.containerGumb .label');
-    // Predpostavimo, da imaš že funkcijo za tvoj poseben neon efekt, npr. triggerNeonAnimation()
-    // če je le klik dogodek, se ta funkcija lahko kliče samodejno preko CSS, zato v handlerju ne blokiraj dogodka.
 
     neonBtn.addEventListener('click', async function(e) {
         clickCount++;
@@ -1393,18 +1392,20 @@
                 if (!response.ok) {
                     throw new Error("Napaka pri generiranju PDF-ja.");
                 }
-                const blob = await response.blob();
-                pdfBlobUrl = URL.createObjectURL(blob);
-                // Shranimo tudi ime datoteke, če je posredovano v headerju
+                // Preberi header Content-Disposition za dinamično ime datoteke
                 const disposition = response.headers.get("Content-Disposition");
                 if (disposition) {
-                    // Iskanje imena med narekovaji
-                    const filenameRegex = /filename="(.+)"/;
-                    const matches = filenameRegex.exec(disposition);
-                    if (matches && matches[1]) {
-                        pdfBlobUrl.filename = matches[1]; // shranimo v lastnost (neobvezno)
+                    const filenameMatch = disposition.match(/filename="(.+?)"/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        pdfFilename = filenameMatch[1];
                     }
                 }
+                // Če ni nastavljeno, uporabi privzeto ime
+                if (!pdfFilename) {
+                    pdfFilename = "izpis.pdf";
+                }
+                const blob = await response.blob();
+                pdfBlobUrl = URL.createObjectURL(blob);
             } catch (error) {
                 alert("⛔ " + error.message);
                 clickCount = 0; // Resetiramo, če pride do napake
@@ -1413,9 +1414,7 @@
             if (pdfBlobUrl) {
                 const a = document.createElement("a");
                 a.href = pdfBlobUrl;
-                // Preberemo ime iz Content-Disposition headerja, če je nastavljeno
-                const responseFilename = pdfBlobUrl.filename || "izpis.pdf";
-                a.download = responseFilename;
+                a.download = pdfFilename;  // Dinamično ime datoteke
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -1423,6 +1422,7 @@
             clickCount = 0;
         }
     });
+
 </script>
 
 </body>

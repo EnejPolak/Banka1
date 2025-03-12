@@ -15,7 +15,10 @@ Relacije med entitetami so:
 •	log_transakcij -> uporabniki (dnevnik operacij nad transakcijami)
 •	transakcije_audit -> transakcije (spremljanje sprememb transakcij)
 
-2. Opis strežniških podprogramov
+![image](https://github.com/user-attachments/assets/2284e5a3-a415-47f2-a944-5bc820b650f1)
+
+
+3. Opis strežniških podprogramov
 Funkcije in procedure v PostgreSQL
 1. sp_registriraj_uporabnika(p_ime, p_email, p_geslo_hash, p_kraj_id)
 •	Ta funkcija preveri, ali e-poštni naslov že obstaja v tabeli uporabniki.
